@@ -53,6 +53,20 @@ Welcome are community extensions (custom agent skills, MCP server integrations).
 
 ---
 
+## Terms of Service & Data Use
+
+> [!WARNING]
+> AI coding agents are known to have certain security risks, including autonomous code execution, data exfiltration, prompt injection, and supply chain risks. Ensure that you monitor and verify all actions taken by the agent.
+
+By using Antigravity CLI, you agree to help improve the product by allowing Google to collect and use your Interactions data, subject to the Google Terms of Service and Google Privacy Policy. You can choose to opt out at any time via your settings.
+
+### Legal & Privacy Links
+
+- **Terms of Service**: [antigravity.google/terms](https://antigravity.google/terms)
+- **Privacy Policy**: [policies.google.com/privacy](https://policies.google.com/privacy)
+
+---
+
 <p align="center">
   <sub>Build with ❤️ </sub>
 </p> 
