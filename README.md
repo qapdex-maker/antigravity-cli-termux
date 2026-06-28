@@ -4,22 +4,22 @@
 
 # Antigravity CLI - Termux Native
 
-**Für die Interaktion mit autonomen Coding-Agenten in Termux.** 
+**For interacting with autonomous coding agents in Termux.**
 
-Bleibe im Flow, ohne den Kontext zu wechseln. Die Antigravity CLI bringt die Core-Funktionalitäten von Antigravity 2.0 – wie mehrstufige Logikketten, paralleles Bearbeiten mehrerer Dateien und asynchrone Subagenten – direkt in dein Terminal. Entwickelt für Tastatur-zentrierte Workflows, Entwickler-Geschwindigkeit und Remote-SSH-Sitzungen mit minimalem Overhead.
-
----
-
-## ✨ Hauptmerkmale
-
-* **Natürliche Sprache**: Steuere, editiere und baue deine gesamte Codebasis rein über Chat-Prompts direkt in der Shell.
-* **Asynchrone Workflows**: Starte rechenintensive Aufgaben (wie Refactoring oder Deep Research) im Hintergrund, ohne dein aktives Terminal zu blockieren.
-* **Werkzeug-Berechtigungen**: Volle Kontrolle über die Sandbox. Entscheide selbst, wie viel Autonomie du deinen Agenten für Systemzugriffe gewährst.
-* **Nahtlose Ökosystem-Synchronisation**: Exportiere komplexe Terminal-Sitzungen bei Bedarf mit nur einem Befehl in die Antigravity 2.0 Desktop-GUI.
+Stay in the flow without switching context. The Antigravity CLI brings core functionalities of Antigravity 2.0 (multi-step logic, parallel editing, async agents) directly to your terminal.
 
 ---
 
-##  Installation
+## ✨ Key Features
+
+* **Natural Language**: Control, edit, and build your codebase via chat prompts.
+* **Asynchronous Workflows**: Run heavy tasks in the background without blocking the shell.
+* **Tool Permissions**: Granular sandbox control over agent system access.
+* **Seamless Ecosystem Sync**: Sync terminal sessions with the Antigravity 2.0 desktop GUI.
+
+---
+
+## Installation
 
 ```bash
 git clone https://github.com/qapdex-maker/antigravity-cli-termux
@@ -30,9 +30,9 @@ chmod +x install.sh
 
 ---
 
-## 🛠️ Erste Schritte
+## 🛠️ Getting started
 
-   **Authentifizierung**: Antigravity startet nach der Installation automatisch und meldet dich über OAuth sicher mit deinem Google-Konto an
+   **Authentication**: Antigravity automatically logs you in via Google OAuth.
    ```bash
    agy --help
 
@@ -47,15 +47,12 @@ Available subcommands:
    ```
 ---
 
-## 🤝 Beitragen
+## 🤝 Contributing
 
-Wir freuen uns über Community-Erweiterungen (Custom Agent Skills, MCP-Server-Anbindungen)! 
-1. Forke dieses Repository.
-2. Erstelle deine Workflows basierend auf unseren [offiziellen Styleguides](https://antigravity.google/docs).
-3. Reiche einen Pull Request ein.
+Welcome are community extensions (custom agent skills, MCP server integrations). Please submit a pull request.
 
 ---
 
 <p align="center">
-  <sub>Built with ❤️ </sub>
-</p>
+  <sub>Build with ❤️ </sub>
+</p> 
