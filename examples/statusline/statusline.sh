@@ -130,9 +130,15 @@ done
 
 # ─── Stats ───────────────────────────────────────────────────────────────────
 CTX="${FG_GRAY}ctx ${BAR_COLOR}${BAR} ${NUM_COLOR}${PCT_FMT}%${R}"
-ART_FMT="${FG_GRAY}artifacts ${NUM_COLOR}${ARTIFACTS}${R}"
-SUB_FMT="${FG_GRAY}subagents ${NUM_COLOR}${SUBAGENTS}${R}"
-BG_FMT="${FG_GRAY}tasks ${NUM_COLOR}${BG_TASKS}${R}"
+
+# Dim zeros for better visual hierarchy
+ART_COLOR=$([ "$ARTIFACTS" -gt 0 ] && echo "$NUM_COLOR" || echo "$FG_GRAY")
+SUB_COLOR=$([ "$SUBAGENTS" -gt 0 ] && echo "$NUM_COLOR" || echo "$FG_GRAY")
+TAS_COLOR=$([ "$BG_TASKS" -gt 0 ] && echo "$NUM_COLOR" || echo "$FG_GRAY")
+
+ART_FMT="${FG_GRAY}artifacts ${ART_COLOR}${ARTIFACTS}${R}"
+SUB_FMT="${FG_GRAY}subagents ${SUB_COLOR}${SUBAGENTS}${R}"
+BG_FMT="${FG_GRAY}tasks ${TAS_COLOR}${BG_TASKS}${R}"
 
 # ─── Separators ──────────────────────────────────────────────────────────────
 DOT="${FG_GRAY} · ${R}"
@@ -150,6 +156,7 @@ elif [ "$COLS" -ge 80 ]; then
   echo -e "${FG_GRAY}╰─${R}${LINE2}"
 else
   # Narrow: compact two-line, minimal chrome
-  echo -e "${S}${M}"
-  echo -e "${CTX}${DOT}${BG_FMT}"
-fi 
+  # Include critical info (State, Model, Branch, Context, Sandbox)
+  echo -e "${S}${M}${V}"
+  echo -e "${CTX}${DOT}${BG_FMT}${DOT}${SB}"
+fi
