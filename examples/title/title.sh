@@ -5,11 +5,13 @@ set -euo pipefail
 DATA=$(cat)
 
 # Extract fields using jq
-eval $(echo "$DATA" | jq -r '
-  "STATE=\"\(.agent_state // "idle")\"
-   CWD=\"\(.workspace.current_dir // "")\"
-  "
-' 2>/dev/null || echo 'STATE="idle" CWD=""')
+{
+  read -r STATE
+  read -r CWD
+} <<< "$(echo "$DATA" | jq -r '
+  (.agent_state // "idle"),
+  (.workspace.current_dir // "")
+' 2>/dev/null || printf "idle\n\n")"
 
 # Try to extract CitC workspace name from CWD
 if [ -n "$CWD" ]; then
@@ -34,4 +36,4 @@ esac
 
 TITLE="$EMOJI $STATE | $WORKSPACE"
 
-echo "$TITLE" 
+echo "$TITLE"
