@@ -168,7 +168,7 @@ download_with_progress() {
     local t_mb_d=$(( (total_size * 10 / 1048576) % 10 ))
 
     # Optimized rendering using pure Bash (removes awk overhead)
-    printf "\r\033[K %b[..]%b [%s] %3d%% %b%3d.%dM / %2d.%dM%b" \
+    printf "\r\033[K %b[..]%b [%s] %3d%% %b%5d.%dM / %4d.%dM%b" \
       "$CYAN" "$RESET" "$bar" "$pct" "$DIM" "$c_mb_i" "$c_mb_d" "$t_mb_i" "$t_mb_d" "$RESET"
 
     sleep 0.15
@@ -181,7 +181,7 @@ download_with_progress() {
     local bar="${full_bar:0:w}"
     local t_mb_i=$(( total_size / 1048576 ))
     local t_mb_d=$(( (total_size * 10 / 1048576) % 10 ))
-    printf "\r\033[K %b[OK]%b [%s] 100%% %b%3d.%dM / %2d.%dM%b\n" \
+    printf "\r\033[K %b[OK]%b [%s] 100%% %b%5d.%dM / %4d.%dM%b\n" \
       "$GREEN" "$RESET" "$bar" "$DIM" "$t_mb_i" "$t_mb_d" "$t_mb_i" "$t_mb_d" "$RESET"
   else
     printf "\r\033[K %b[ERR]%b Download failed.\n" "$RED" "$RESET"
