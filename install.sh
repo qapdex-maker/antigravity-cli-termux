@@ -242,6 +242,7 @@ divider
 command -v curl >/dev/null 2>&1  || die "curl is required"
 command -v tar  >/dev/null 2>&1  || die "tar is required"
 command -v install >/dev/null 2>&1 || die "install is required"
+command -v jq      >/dev/null 2>&1 || die "jq is required (used by statusline and other tools)"
 
 GLIBC_LOADER="${TERMUX_PREFIX}/glibc/lib/ld-linux-aarch64.so.1"
 if [[ ! -x "$GLIBC_LOADER" ]]; then
@@ -319,7 +320,7 @@ else
 fi
 
 # ── Done ──────────────────────────────────────────────────────────────────────
-printf '\n%b\n' "${GREEN}${BOLD}Installation Complete.${RESET}"
+printf '\n%b\n' "${GREEN}${BOLD}✨ Installation Complete! 🚀${RESET}"
 divider
 info "Installed binaries to: ${BOLD}${INSTALL_BIN_DIR}${RESET}"
 info "Release archive kept at: ${BOLD}${TMP}${RESET}"
