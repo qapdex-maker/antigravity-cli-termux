@@ -148,28 +148,29 @@ download_with_progress() {
   curl -fLs -H "Cache-Control: no-cache" "$url" -o "$dest" >/dev/null 2>&1 &
   local pid=$!
 
+  local full_bar="████████████████████████████████████████████████████████████"
+  local empty_bar="░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
+
   while kill -0 "$pid" 2>/dev/null; do
     local current_size=0
     if [[ -f "$dest" ]]; then
       current_size=$(wc -c < "$dest" 2>/dev/null || echo 0)
     fi
 
-    awk -v c="$current_size" -v t="$total_size" -v cyan="$CYAN" -v dim="$DIM" -v rst="$RESET" -v width="$w" '
-    BEGIN {
-      pct = (t > 0) ? (c / t) * 100 : 0
-      if (pct > 100) pct = 100
-      filled = int((pct / 100) * width)
-      empty = width - filled
+    local pct=$(( total_size > 0 ? current_size * 100 / total_size : 0 ))
+    (( pct > 100 )) && pct=100
+    local filled=$(( pct * w / 100 ))
+    local bar="${full_bar:0:filled}${empty_bar:0:w-filled}"
 
-      bar = ""
-      for (i=0; i<filled; i++) bar = bar "█"
-      for (i=0; i<empty; i++) bar = bar "░"
+    local c_mb_i=$(( current_size / 1048576 ))
+    local c_mb_d=$(( (current_size * 10 / 1048576) % 10 ))
+    local t_mb_i=$(( total_size / 1048576 ))
+    local t_mb_d=$(( (total_size * 10 / 1048576) % 10 ))
 
-      c_mb = c / 1048576
-      t_mb = t / 1048576
+    # Optimized rendering using pure Bash (removes awk overhead)
+    printf "\r\033[K %b[..]%b [%s] %3d%% %b%3d.%dM / %2d.%dM%b" \
+      "$CYAN" "$RESET" "$bar" "$pct" "$DIM" "$c_mb_i" "$c_mb_d" "$t_mb_i" "$t_mb_d" "$RESET"
 
-      printf "\r\033[K %s[..]%s [%s] %3d%% %s%5.1fM / %4.1fM%s", cyan, rst, bar, pct, dim, c_mb, t_mb, rst
-    }'
     sleep 0.15
   done
 
@@ -177,13 +178,11 @@ download_with_progress() {
   wait "$pid" || exit_status=$?
 
   if [ $exit_status -eq 0 ]; then
-    awk -v t="$total_size" -v grn="$GREEN" -v dim="$DIM" -v rst="$RESET" -v width="$w" '
-    BEGIN {
-      bar = ""
-      for (i=0; i<width; i++) bar = bar "█"
-      t_mb = t / 1048576
-      printf "\r\033[K %s[OK]%s [%s] 100%% %s%5.1fM / %4.1fM%s\n", grn, rst, bar, dim, t_mb, t_mb, rst
-    }'
+    local bar="${full_bar:0:w}"
+    local t_mb_i=$(( total_size / 1048576 ))
+    local t_mb_d=$(( (total_size * 10 / 1048576) % 10 ))
+    printf "\r\033[K %b[OK]%b [%s] 100%% %b%3d.%dM / %2d.%dM%b\n" \
+      "$GREEN" "$RESET" "$bar" "$DIM" "$t_mb_i" "$t_mb_d" "$t_mb_i" "$t_mb_d" "$RESET"
   else
     printf "\r\033[K %b[ERR]%b Download failed.\n" "$RED" "$RESET"
   fi
