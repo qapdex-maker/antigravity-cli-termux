@@ -298,6 +298,7 @@ fi
 
 install -m 0755 "$EXTRACT_DIR/agy" "$INSTALL_BIN_DIR/agy" || die "Failed to install agy binary to $INSTALL_BIN_DIR"
 install -m 0755 "$EXTRACT_DIR/agy.va39" "$INSTALL_BIN_DIR/agy.va39" || die "Failed to install agy.va39 binary to $INSTALL_BIN_DIR"
+ln -sf "agy" "$INSTALL_BIN_DIR/antigravity" || die "Failed to create antigravity symlink"
 rm -rf "$EXTRACT_DIR"
 
 # ── Verify twin-binary ────────────────────────────────────────────────────────
@@ -353,4 +354,4 @@ if [[ "${AGY_INSTALL_SKIP_LAUNCH:-0}" == "1" ]]; then
   exit 0
 fi
 
-exec "$INSTALL_BIN_DIR/agy" 
+exec "$INSTALL_BIN_DIR/antigravity"
