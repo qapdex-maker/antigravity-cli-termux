@@ -2,8 +2,8 @@
 # Antigravity CLI - Termux Native (Setup)
 set -Eeuo pipefail
 
-REPO="${AGY_REPO:-wallentx/antigravity-cli-termux}"
-URL="${AGY_INSTALL_URL:-https://github.com/$REPO/releases/latest/download/antigravity-termux-standalone.tar.gz}"
+REPO="${ANTIGRAVITY_REPO:-wallentx/antigravity-cli-termux}"
+URL="${ANTIGRAVITY_INSTALL_URL:-https://github.com/$REPO/releases/latest/download/antigravity-termux-standalone.tar.gz}"
 
 # ── Environment Detection ─────────────────────────────────────────────────────
 if [[ -z "${TERMUX_VERSION:-}" || -z "${PREFIX:-}" ]]; then
@@ -24,7 +24,7 @@ ENV_TYPE="termux"
 TERMUX_PREFIX="$PREFIX"
 INSTALL_BIN_DIR="${TERMUX_PREFIX}/bin"
 TMP="${TERMUX_PREFIX}/tmp/antigravity-termux-standalone.tar.gz"
-EXTRACT_DIR="${TERMUX_PREFIX}/tmp/.agy-extract"
+EXTRACT_DIR="${TERMUX_PREFIX}/tmp/.antigravity-extract"
 INSTALL_SUCCESS=0
 
 # Ensure base directories exist for fresh setups
@@ -37,18 +37,18 @@ cleanup() {
   [[ -d "$EXTRACT_DIR" ]] && rm -rf "$EXTRACT_DIR"
   if [[ "${INSTALL_SUCCESS:-0}" -ne 1 ]]; then
     [[ -f "$TMP" ]] && rm -f "$TMP"
-    if [[ -n "${AGY_BAK:-}" && -f "$AGY_BAK" ]]; then
-      mv -f "$AGY_BAK" "$INSTALL_BIN_DIR/agy" || true
+    if [[ -n "${ANTIGRAVITY_BAK:-}" && -f "$ANTIGRAVITY_BAK" ]]; then
+      mv -f "$ANTIGRAVITY_BAK" "$INSTALL_BIN_DIR/antigravity" || true
     fi
-    if [[ -n "${AGY_VA39_BAK:-}" && -f "$AGY_VA39_BAK" ]]; then
-      mv -f "$AGY_VA39_BAK" "$INSTALL_BIN_DIR/agy.va39" || true
+    if [[ -n "${ANTIGRAVITY_VA39_BAK:-}" && -f "$ANTIGRAVITY_VA39_BAK" ]]; then
+      mv -f "$ANTIGRAVITY_VA39_BAK" "$INSTALL_BIN_DIR/antigravity.va39" || true
     fi
   else
-    if [[ -n "${AGY_BAK:-}" && -f "$AGY_BAK" ]]; then
-      rm -f "$AGY_BAK" || true
+    if [[ -n "${ANTIGRAVITY_BAK:-}" && -f "$ANTIGRAVITY_BAK" ]]; then
+      rm -f "$ANTIGRAVITY_BAK" || true
     fi
-    if [[ -n "${AGY_VA39_BAK:-}" && -f "$AGY_VA39_BAK" ]]; then
-      rm -f "$AGY_VA39_BAK" || true
+    if [[ -n "${ANTIGRAVITY_VA39_BAK:-}" && -f "$ANTIGRAVITY_VA39_BAK" ]]; then
+      rm -f "$ANTIGRAVITY_VA39_BAK" || true
     fi
   fi
 }
@@ -193,7 +193,7 @@ download_with_progress() {
 
 # ── Header ────────────────────────────────────────────────────────────────────
 echo ""
-TMP_LOGO=$(mktemp 2>/dev/null || echo "${HOME}/.local/.agy-logo.ans")
+TMP_LOGO=$(mktemp 2>/dev/null || echo "${HOME}/.local/.antigravity-logo.ans")
 
 if { curl -fLs -H "Cache-Control: no-cache" "https://raw.githubusercontent.com/${REPO}/dev/logo.ans" > "$TMP_LOGO" 2>/dev/null || curl -fLs -H "Cache-Control: no-cache" "https://raw.githubusercontent.com/Brajesh2022/antigravity-cli-termux/dev/logo.ans" > "$TMP_LOGO" 2>/dev/null; } && [[ -s "$TMP_LOGO" ]]; then
 
@@ -285,37 +285,37 @@ download_with_progress "$URL" "$TMP" || die
 tar -xz -C "$EXTRACT_DIR" -f "$TMP" agy agy.va39 >/dev/null 2>&1 &
 spinner $! "Extracting binaries..." || die
 
-AGY_BAK=""
-AGY_VA39_BAK=""
-if [[ -f "$INSTALL_BIN_DIR/agy" ]]; then
-  AGY_BAK="$INSTALL_BIN_DIR/agy.bak.$$"
-  mv -f "$INSTALL_BIN_DIR/agy" "$AGY_BAK" || die "Failed to back up existing agy binary from $INSTALL_BIN_DIR"
+ANTIGRAVITY_BAK=""
+ANTIGRAVITY_VA39_BAK=""
+if [[ -f "$INSTALL_BIN_DIR/antigravity" ]]; then
+  ANTIGRAVITY_BAK="$INSTALL_BIN_DIR/antigravity.bak.$$"
+  mv -f "$INSTALL_BIN_DIR/antigravity" "$ANTIGRAVITY_BAK" || die "Failed to back up existing antigravity binary from $INSTALL_BIN_DIR"
 fi
-if [[ -f "$INSTALL_BIN_DIR/agy.va39" ]]; then
-  AGY_VA39_BAK="$INSTALL_BIN_DIR/agy.va39.bak.$$"
-  mv -f "$INSTALL_BIN_DIR/agy.va39" "$AGY_VA39_BAK" || die "Failed to back up existing agy.va39 binary from $INSTALL_BIN_DIR"
+if [[ -f "$INSTALL_BIN_DIR/antigravity.va39" ]]; then
+  ANTIGRAVITY_VA39_BAK="$INSTALL_BIN_DIR/antigravity.va39.bak.$$"
+  mv -f "$INSTALL_BIN_DIR/antigravity.va39" "$ANTIGRAVITY_VA39_BAK" || die "Failed to back up existing antigravity.va39 binary from $INSTALL_BIN_DIR"
 fi
 
-install -m 0755 "$EXTRACT_DIR/agy" "$INSTALL_BIN_DIR/agy" || die "Failed to install agy binary to $INSTALL_BIN_DIR"
-install -m 0755 "$EXTRACT_DIR/agy.va39" "$INSTALL_BIN_DIR/agy.va39" || die "Failed to install agy.va39 binary to $INSTALL_BIN_DIR"
-ln -sf "agy" "$INSTALL_BIN_DIR/antigravity" || die "Failed to create antigravity symlink"
+install -m 0755 "$EXTRACT_DIR/agy" "$INSTALL_BIN_DIR/antigravity" || die "Failed to install antigravity binary to $INSTALL_BIN_DIR"
+install -m 0755 "$EXTRACT_DIR/agy.va39" "$INSTALL_BIN_DIR/antigravity.va39" || die "Failed to install antigravity.va39 binary to $INSTALL_BIN_DIR"
+ln -sf "antigravity" "$INSTALL_BIN_DIR/agy" || die "Failed to create antigravity symlink"
 rm -rf "$EXTRACT_DIR"
 
 # ── Verify twin-binary ────────────────────────────────────────────────────────
-if [[ ! -f "$INSTALL_BIN_DIR/agy" || ! -f "$INSTALL_BIN_DIR/agy.va39" ]]; then
-  rm -f "$INSTALL_BIN_DIR/agy" "$INSTALL_BIN_DIR/agy.va39"
+if [[ ! -f "$INSTALL_BIN_DIR/antigravity" || ! -f "$INSTALL_BIN_DIR/antigravity.va39" ]]; then
+  rm -f "$INSTALL_BIN_DIR/antigravity" "$INSTALL_BIN_DIR/antigravity.va39"
   die "Verification failed: binaries not found in $INSTALL_BIN_DIR"
 fi
 ok "Binary found"
 
 # ── Test & Extract Version ────────────────────────────────────────────────────
 VERSION=""
-if VERSION=$("$INSTALL_BIN_DIR/agy" --version 2>/dev/null); then
+if VERSION=$("$INSTALL_BIN_DIR/antigravity" --version 2>/dev/null); then
   ok "Engine online ($VERSION verified)"
-  [[ -n "$AGY_BAK" && -f "$AGY_BAK" ]] && rm -f "$AGY_BAK"
-  [[ -n "$AGY_VA39_BAK" && -f "$AGY_VA39_BAK" ]] && rm -f "$AGY_VA39_BAK"
+  [[ -n "$ANTIGRAVITY_BAK" && -f "$ANTIGRAVITY_BAK" ]] && rm -f "$ANTIGRAVITY_BAK"
+  [[ -n "$ANTIGRAVITY_VA39_BAK" && -f "$ANTIGRAVITY_VA39_BAK" ]] && rm -f "$ANTIGRAVITY_VA39_BAK"
 else
-  rm -f "$INSTALL_BIN_DIR/agy" "$INSTALL_BIN_DIR/agy.va39"
+  rm -f "$INSTALL_BIN_DIR/antigravity" "$INSTALL_BIN_DIR/antigravity.va39"
   die "Binaries failed to execute locally. Check dependencies."
 fi
 
@@ -349,8 +349,8 @@ INSTALL_SUCCESS=1
 cleanup
 trap - EXIT
 
-if [[ "${AGY_INSTALL_SKIP_LAUNCH:-0}" == "1" ]]; then
-  ok "Launch skipped by AGY_INSTALL_SKIP_LAUNCH"
+if [[ "${ANTIGRAVITY_INSTALL_SKIP_LAUNCH:-0}" == "1" ]]; then
+  ok "Launch skipped by ANTIGRAVITY_INSTALL_SKIP_LAUNCH"
   exit 0
 fi
 
