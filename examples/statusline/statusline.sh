@@ -57,6 +57,14 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
   ' 2>/dev/null || printf "idle\n0\n\nfalse\nfalse\n0\n0\n0\n\n80\n"
 )"
 
+# ─── Numeric Validation ──────────────────────────────────────────────────────
+# Ensure variables used in arithmetic context are strictly numeric to prevent injection.
+[[ ! "$USED_PCT" =~ ^[0-9]*\.?[0-9]+$ ]] && USED_PCT=0
+[[ ! "$ARTIFACTS" =~ ^[0-9]+$ ]] && ARTIFACTS=0
+[[ ! "$SUBAGENTS" =~ ^[0-9]+$ ]] && SUBAGENTS=0
+[[ ! "$BG_TASKS"  =~ ^[0-9]+$ ]] && BG_TASKS=0
+[[ ! "$COLS"      =~ ^[0-9]+$ ]] && COLS=80
+
 # ─── Computed Values ─────────────────────────────────────────────────────────
 # Use LC_NUMERIC=C to prevent bash printf errors in locales that use commas for decimals
 PCT_FMT=$(LC_NUMERIC=C printf "%.1f" "$USED_PCT")

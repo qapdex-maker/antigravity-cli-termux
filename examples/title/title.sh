@@ -8,10 +8,10 @@ DATA=$(cat)
 {
   read -r STATE
   read -r CWD
-} <<< "$(echo "$DATA" | jq -r '
+} <<< "$(jq -r '
   (.agent_state // "idle"),
   (.workspace.current_dir // "")
-' 2>/dev/null || printf "idle\n\n")"
+' 2>/dev/null <<< "$DATA" || printf "idle\n\n")"
 
 # Try to extract CitC workspace name from CWD
 if [ -n "$CWD" ]; then
