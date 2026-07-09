@@ -34,7 +34,7 @@ chmod +x install.sh
 
    **Authentication**: Antigravity automatically logs you in via Google OAuth.
    ```bash
-   antigravity --help
+   agy --help
 
 Available subcommands:
   changelog       Show changelog and release notes
