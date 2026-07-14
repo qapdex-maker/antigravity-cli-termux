@@ -31,6 +31,7 @@ case "$STATE" in
   thinking)     EMOJI="🤔" ;;
   working)      EMOJI="🏃" ;;
   tool_use)     EMOJI="🛠️" ;;
+  review)       EMOJI="👀" ;;
   *)            EMOJI="🤖" ;;
 esac
 
