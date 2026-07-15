@@ -18,11 +18,19 @@ if [ -n "$CWD" ]; then
   if [[ "$CWD" =~ /google/src/cloud/[^/]+/([^/]+) ]]; then
     WORKSPACE="${BASH_REMATCH[1]}"
   else
-    WORKSPACE=$(basename "$CWD")
+    # Extract base name using pure Bash parameter expansion to prevent process spawns and option injection
+    TEMP_CWD="${CWD%/}"
+    WORKSPACE="${TEMP_CWD##*/}"
+    WORKSPACE="${WORKSPACE:-/}"
   fi
 else
   WORKSPACE="unknown"
 fi
+
+# ─── Input Validation & Sanitization ─────────────────────────────────────────
+# Ensure variables are strictly validated and sanitized to prevent terminal/option injection.
+[[ "$STATE"      == *[!a-zA-Z0-9_-]* || -z "$STATE" ]] && STATE="idle"
+[[ "$WORKSPACE"  == *[!a-zA-Z0-9_./\ -]* || -z "$WORKSPACE" ]] && WORKSPACE="unknown"
 
 # Map state to emoji
 case "$STATE" in
@@ -36,4 +44,5 @@ esac
 
 TITLE="$EMOJI $STATE | $WORKSPACE"
 
-echo "$TITLE"
+# Print title safely to avoid option injection
+printf "%s\n" "$TITLE"

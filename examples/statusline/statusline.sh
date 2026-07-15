@@ -57,18 +57,26 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
   ' 2>/dev/null || printf "idle\n0\n\nfalse\nfalse\n0\n0\n0\n\n80\n"
 )"
 
-# ─── Numeric Validation ──────────────────────────────────────────────────────
-# Ensure variables used in arithmetic context are strictly numeric to prevent injection.
-[[ ! "$USED_PCT" =~ ^[0-9]*\.?[0-9]+$ ]] && USED_PCT=0
-[[ ! "$ARTIFACTS" =~ ^[0-9]+$ ]] && ARTIFACTS=0
-[[ ! "$SUBAGENTS" =~ ^[0-9]+$ ]] && SUBAGENTS=0
-[[ ! "$BG_TASKS"  =~ ^[0-9]+$ ]] && BG_TASKS=0
-[[ ! "$COLS"      =~ ^[0-9]+$ ]] && COLS=80
+# ─── Input Validation & Sanitization ─────────────────────────────────────────
+# Ensure variables are strictly validated and sanitized to prevent terminal/option injection.
+RE_PCT='^[0-9]*\.?[0-9]+$'
+[[ ! "$USED_PCT" =~ $RE_PCT ]] && USED_PCT=0
+
+[[ "$STATE"      == *[!a-zA-Z0-9_-]* || -z "$STATE" ]] && STATE="idle"
+[[ "$VCS_BRANCH" == *[!a-zA-Z0-9_./-]* ]] && VCS_BRANCH=""
+[[ "$VCS_DIRTY"  != "true" && "$VCS_DIRTY" != "false" ]] && VCS_DIRTY="false"
+[[ "$SANDBOX"    != "true" && "$SANDBOX" != "false" ]] && SANDBOX="false"
+[[ "$ARTIFACTS"  == *[!0-9]* || -z "$ARTIFACTS" ]] && ARTIFACTS=0
+[[ "$SUBAGENTS"  == *[!0-9]* || -z "$SUBAGENTS" ]] && SUBAGENTS=0
+[[ "$BG_TASKS"   == *[!0-9]* || -z "$BG_TASKS" ]] && BG_TASKS=0
+[[ "$MODEL"      == *[!a-zA-Z0-9_./\ -]* ]] && MODEL=""
+[[ "$COLS"       == *[!0-9]* || -z "$COLS" ]] && COLS=80
 
 # ─── Computed Values ─────────────────────────────────────────────────────────
-# Use LC_NUMERIC=C to prevent bash printf errors in locales that use commas for decimals
-PCT_FMT=$(LC_NUMERIC=C printf "%.1f" "$USED_PCT")
+# Use LC_NUMERIC=C and printf -v to prevent fork overhead and locale errors
+LC_NUMERIC=C printf -v PCT_FMT "%.1f" "$USED_PCT"
 PCT_INT=${USED_PCT%.*}; PCT_INT=${PCT_INT:-0}
+[[ ! "$PCT_INT"    =~ ^[0-9]+$ ]] && PCT_INT=0
 
 # ─── State Indicator (No background colors) ──────────────────────────────────
 case "$STATE" in
@@ -76,7 +84,7 @@ case "$STATE" in
   thinking) S="${FG_BRIGHT_YELLOW}${B}◆ THINKING${R}" ;;
   working)  S="${FG_BRIGHT_CYAN}${B}⚙ WORKING${R}" ;;
   tool_use) S="${FG_BRIGHT_MAGENTA}${B}🔧 TOOL${R}" ;;
-  *)        S="${FG_WHITE}${B}⏳ $(echo "$STATE" | tr '[:lower:]' '[:upper:]')${R}" ;;
+  *)        S="${FG_WHITE}${B}⏳ ${STATE^^}${R}" ;;
 esac
 
 # ─── VCS Branch ──────────────────────────────────────────────────────────────
@@ -139,10 +147,10 @@ done
 # ─── Stats ───────────────────────────────────────────────────────────────────
 CTX="${FG_GRAY}ctx ${BAR_COLOR}${BAR} ${NUM_COLOR}${PCT_FMT}%${R}"
 
-# Dim zeros for better visual hierarchy
-ART_COLOR=$([ "$ARTIFACTS" -gt 0 ] && echo "$NUM_COLOR" || echo "$FG_GRAY")
-SUB_COLOR=$([ "$SUBAGENTS" -gt 0 ] && echo "$NUM_COLOR" || echo "$FG_GRAY")
-TAS_COLOR=$([ "$BG_TASKS" -gt 0 ] && echo "$NUM_COLOR" || echo "$FG_GRAY")
+# Dim zeros for better visual hierarchy without spawning subshells
+ART_COLOR="$FG_GRAY"; [ "$ARTIFACTS" -gt 0 ] && ART_COLOR="$NUM_COLOR"
+SUB_COLOR="$FG_GRAY"; [ "$SUBAGENTS" -gt 0 ] && SUB_COLOR="$NUM_COLOR"
+TAS_COLOR="$FG_GRAY"; [ "$BG_TASKS" -gt 0 ] && TAS_COLOR="$NUM_COLOR"
 
 ART_FMT="${FG_GRAY}artifacts ${ART_COLOR}${ARTIFACTS}${R}"
 SUB_FMT="${FG_GRAY}subagents ${SUB_COLOR}${SUBAGENTS}${R}"
