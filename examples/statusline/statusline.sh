@@ -82,17 +82,30 @@ esac
 # ─── VCS Branch ──────────────────────────────────────────────────────────────
 V=""
 if [ -n "$VCS_BRANCH" ]; then
+  # Truncate branch name if it is too long and we are on a narrow terminal (< 80 cols)
+  DISPLAY_BRANCH="$VCS_BRANCH"
+  if [ "$COLS" -lt 80 ] && [ "${#VCS_BRANCH}" -gt 15 ]; then
+    DISPLAY_BRANCH="${VCS_BRANCH:0:9}...${VCS_BRANCH: -3}"
+  fi
+
   if [ "$VCS_DIRTY" = "true" ]; then
-    V="${FG_GRAY} ╱ ${FG_BRIGHT_RED}${VCS_BRANCH}${FG_BRIGHT_YELLOW}*${R}"
+    V="${FG_GRAY} ╱ ${FG_BRIGHT_RED}${DISPLAY_BRANCH}${FG_BRIGHT_YELLOW}*${R}"
   else
-    V="${FG_GRAY} ╱ ${FG_BRIGHT_BLUE}${VCS_BRANCH}${R}"
+    V="${FG_GRAY} ╱ ${FG_BRIGHT_BLUE}${DISPLAY_BRANCH}${R}"
   fi
 fi
 
 # ─── Model ───────────────────────────────────────────────────────────────────
 M=""
 if [ -n "$MODEL" ]; then
-  M="${FG_GRAY} ╱ ${FG_BRIGHT_MAGENTA}${I}${MODEL}${R}"
+  # Hide model on extremely narrow screens (< 50 cols) or truncate if narrow (< 80 cols)
+  if [ "$COLS" -ge 50 ]; then
+    DISPLAY_MODEL="$MODEL"
+    if [ "$COLS" -lt 80 ] && [ "${#MODEL}" -gt 15 ]; then
+      DISPLAY_MODEL="${MODEL:0:9}...${MODEL: -3}"
+    fi
+    M="${FG_GRAY} ╱ ${FG_BRIGHT_MAGENTA}${I}${DISPLAY_MODEL}${R}"
+  fi
 fi
 
 # ─── Sandbox Badge ───────────────────────────────────────────────────────────
@@ -102,8 +115,12 @@ else
   SB="${FG_GRAY}sandbox off${R}"
 fi
 
-# ─── Context Bar (15 segments, fine-grain Unicode) ────────────────────────────
+# ─── Context Bar (dynamic width based on screen width, fine-grain Unicode) ───
 BAR_LEN=15
+if [ "$COLS" -lt 80 ]; then
+  BAR_LEN=8
+fi
+
 FILLED=$((PCT_INT * BAR_LEN / 100))
 REMAINDER=$(( (PCT_INT * BAR_LEN) % 100 ))
 
@@ -137,7 +154,9 @@ for ((i = 0; i < BAR_LEN; i++)); do
 done
 
 # ─── Stats ───────────────────────────────────────────────────────────────────
-CTX="${FG_GRAY}ctx ${BAR_COLOR}${BAR} ${NUM_COLOR}${PCT_FMT}%${R}"
+# Match context percentage text color with warning color for high usage (red/yellow/white)
+CTX_PCT_COLOR="${BAR_COLOR}${B}"
+CTX="${FG_GRAY}ctx ${BAR_COLOR}${BAR} ${CTX_PCT_COLOR}${PCT_FMT}%${R}"
 
 # Dim zeros for better visual hierarchy
 ART_COLOR=$([ "$ARTIFACTS" -gt 0 ] && echo "$NUM_COLOR" || echo "$FG_GRAY")
