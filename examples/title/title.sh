@@ -18,7 +18,12 @@ if [ -n "$CWD" ]; then
   if [[ "$CWD" =~ /google/src/cloud/[^/]+/([^/]+) ]]; then
     WORKSPACE="${BASH_REMATCH[1]}"
   else
-    WORKSPACE=$(basename "$CWD")
+    # Performance Optimization (Bolt): Use pure Bash parameter expansion
+    # instead of spawning a subshell with the external `basename` command.
+    # This avoids fork/exec overhead which is highly beneficial on mobile/Termux environments.
+    WORKSPACE="${CWD%/}"
+    WORKSPACE="${WORKSPACE##*/}"
+    WORKSPACE="${WORKSPACE:-/}"
   fi
 else
   WORKSPACE="unknown"
