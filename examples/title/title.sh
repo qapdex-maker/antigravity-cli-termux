@@ -18,17 +18,10 @@ if [ -n "$CWD" ]; then
   if [[ "$CWD" =~ /google/src/cloud/[^/]+/([^/]+) ]]; then
     WORKSPACE="${BASH_REMATCH[1]}"
   else
- sentinel/security-improvement-bash-injection-3632722592319210898
-    # Extract base name using pure Bash parameter expansion to prevent process spawns and option injection
+    # Extract base name using pure Bash parameter expansion to prevent process spawns and option injection.
+    # Performance Optimization (Bolt): This avoids fork/exec overhead of the external `basename` command.
     TEMP_CWD="${CWD%/}"
     WORKSPACE="${TEMP_CWD##*/}"
-=======
-    # Performance Optimization (Bolt): Use pure Bash parameter expansion
-    # instead of spawning a subshell with the external `basename` command.
-    # This avoids fork/exec overhead which is highly beneficial on mobile/Termux environments.
-    WORKSPACE="${CWD%/}"
-    WORKSPACE="${WORKSPACE##*/}"
- main
     WORKSPACE="${WORKSPACE:-/}"
   fi
 else
