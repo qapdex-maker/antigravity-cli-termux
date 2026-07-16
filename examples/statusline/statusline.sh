@@ -80,11 +80,14 @@ PCT_INT=${USED_PCT%.*}; PCT_INT=${PCT_INT:-0}
 
 # ─── State Indicator (No background colors) ──────────────────────────────────
 case "$STATE" in
-  idle)     S="${FG_BRIGHT_GREEN}${B}● READY${R}" ;;
-  thinking) S="${FG_BRIGHT_YELLOW}${B}◆ THINKING${R}" ;;
-  working)  S="${FG_BRIGHT_CYAN}${B}⚙ WORKING${R}" ;;
-  tool_use) S="${FG_BRIGHT_MAGENTA}${B}🔧 TOOL${R}" ;;
-  *)        S="${FG_WHITE}${B}⏳ ${STATE^^}${R}" ;;
+  initializing) S="${FG_BRIGHT_CYAN}${B}🚀 INIT${R}" ;;
+  idle)         S="${FG_BRIGHT_GREEN}${B}● READY${R}" ;;
+  thinking)     S="${FG_BRIGHT_YELLOW}${B}◆ THINKING${R}" ;;
+  working)      S="${FG_BRIGHT_CYAN}${B}⚙ WORKING${R}" ;;
+  tool_use)     S="${FG_BRIGHT_MAGENTA}${B}🔧 TOOL${R}" ;;
+  review)       S="${FG_BRIGHT_BLUE}${B}👀 REVIEW${R}" ;;
+  *)            UPPER_STATE=$(echo "$STATE" | tr '[:lower:]' '[:upper:]')
+                S="${FG_WHITE}${B}⏳ ${UPPER_STATE}${R}" ;;
 esac
 
 # ─── VCS Branch ──────────────────────────────────────────────────────────────
