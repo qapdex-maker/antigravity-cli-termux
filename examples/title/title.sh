@@ -14,9 +14,19 @@ DATA=$(cat)
 ' 2>/dev/null <<< "$DATA" || printf "idle\n\n")"
 
 # Try to extract CitC workspace name from CWD
+# Performance Optimization (Bolt): Avoid regex `=~` engine compilation and execution overhead by using pure Bash parameter expansion.
 if [ -n "$CWD" ]; then
-  if [[ "$CWD" =~ /google/src/cloud/[^/]+/([^/]+) ]]; then
-    WORKSPACE="${BASH_REMATCH[1]}"
+  if [[ "$CWD" == "/google/src/cloud/"* ]]; then
+    TEMP_CWD="${CWD#/google/src/cloud/}"
+    if [[ "$TEMP_CWD" == *"/"* ]]; then
+      TEMP_CWD="${TEMP_CWD#*/}"
+      WORKSPACE="${TEMP_CWD%%/*}"
+    else
+      # Not enough components, fall back to basename
+      TEMP_CWD="${CWD%/}"
+      WORKSPACE="${TEMP_CWD##*/}"
+      WORKSPACE="${WORKSPACE:-/}"
+    fi
   else
     # Extract base name using pure Bash parameter expansion to prevent process spawns and option injection.
     # Performance Optimization (Bolt): This avoids fork/exec overhead of the external `basename` command.

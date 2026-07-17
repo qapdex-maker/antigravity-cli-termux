@@ -59,8 +59,10 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
 
 # ─── Input Validation & Sanitization ─────────────────────────────────────────
 # Ensure variables are strictly validated and sanitized to prevent terminal/option injection.
-RE_PCT='^[0-9]*\.?[0-9]+$'
-[[ ! "$USED_PCT" =~ $RE_PCT ]] && USED_PCT=0
+# Performance Optimization (Bolt): Use POSIX glob-based character checks to avoid regex overhead.
+if [[ -z "$USED_PCT" || "$USED_PCT" == *[!0-9.]* || "$USED_PCT" == *.*.* || "$USED_PCT" == "." ]]; then
+  USED_PCT=0
+fi
 
 [[ "$STATE"      == *[!a-zA-Z0-9_-]* || -z "$STATE" ]] && STATE="idle"
 [[ "$VCS_BRANCH" == *[!a-zA-Z0-9_./-]* ]] && VCS_BRANCH=""
@@ -76,7 +78,8 @@ RE_PCT='^[0-9]*\.?[0-9]+$'
 # Use LC_NUMERIC=C and printf -v to prevent fork overhead and locale errors
 LC_NUMERIC=C printf -v PCT_FMT "%.1f" "$USED_PCT"
 PCT_INT=${USED_PCT%.*}; PCT_INT=${PCT_INT:-0}
-[[ ! "$PCT_INT"    =~ ^[0-9]+$ ]] && PCT_INT=0
+# Performance Optimization (Bolt): Use pure Bash character-class validation to avoid regex overhead.
+[[ -z "$PCT_INT" || "$PCT_INT" == *[!0-9]* ]] && PCT_INT=0
 
 # ─── State Indicator (No background colors) ──────────────────────────────────
 case "$STATE" in
@@ -86,7 +89,35 @@ case "$STATE" in
   working)      S="${FG_BRIGHT_CYAN}${B}⚙ WORKING${R}" ;;
   tool_use)     S="${FG_BRIGHT_MAGENTA}${B}🔧 TOOL${R}" ;;
   review)       S="${FG_BRIGHT_BLUE}${B}👀 REVIEW${R}" ;;
-  *)            UPPER_STATE=$(echo "$STATE" | tr '[:lower:]' '[:upper:]')
+  *)            # Performance Optimization (Bolt): Pure Bash transliteration to uppercase avoids fork/exec overhead.
+                # Avoids `${STATE^^}` for compatibility with older Bash versions (like Bash 3.2 on macOS).
+                UPPER_STATE="$STATE"
+                UPPER_STATE=${UPPER_STATE//a/A}
+                UPPER_STATE=${UPPER_STATE//b/B}
+                UPPER_STATE=${UPPER_STATE//c/C}
+                UPPER_STATE=${UPPER_STATE//d/D}
+                UPPER_STATE=${UPPER_STATE//e/E}
+                UPPER_STATE=${UPPER_STATE//f/F}
+                UPPER_STATE=${UPPER_STATE//g/G}
+                UPPER_STATE=${UPPER_STATE//h/H}
+                UPPER_STATE=${UPPER_STATE//i/I}
+                UPPER_STATE=${UPPER_STATE//j/J}
+                UPPER_STATE=${UPPER_STATE//k/K}
+                UPPER_STATE=${UPPER_STATE//l/L}
+                UPPER_STATE=${UPPER_STATE//m/M}
+                UPPER_STATE=${UPPER_STATE//n/N}
+                UPPER_STATE=${UPPER_STATE//o/O}
+                UPPER_STATE=${UPPER_STATE//p/P}
+                UPPER_STATE=${UPPER_STATE//q/Q}
+                UPPER_STATE=${UPPER_STATE//r/R}
+                UPPER_STATE=${UPPER_STATE//s/S}
+                UPPER_STATE=${UPPER_STATE//t/T}
+                UPPER_STATE=${UPPER_STATE//u/U}
+                UPPER_STATE=${UPPER_STATE//v/V}
+                UPPER_STATE=${UPPER_STATE//w/W}
+                UPPER_STATE=${UPPER_STATE//x/X}
+                UPPER_STATE=${UPPER_STATE//y/Y}
+                UPPER_STATE=${UPPER_STATE//z/Z}
                 S="${FG_WHITE}${B}⏳ ${UPPER_STATE}${R}" ;;
 esac
 
