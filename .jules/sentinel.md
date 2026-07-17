@@ -14,3 +14,8 @@
 **Vulnerability:** Untrusted string inputs (such as Git branch names or current directory paths) parsed from JSON payloads printed with `echo -e` or passed to commands like `basename` without option separators (`--`).
 **Learning:** This allows malicious or unexpected data to inject terminal escape sequences or pass options (such as `-v` or those starting with `-`) to external commands.
 **Prevention:** Whitelist and sanitize all string inputs via POSIX-compatible glob-based pattern validation, prefer `printf` over `echo`, and replace external commands with pure Bash parameter expansions to completely eliminate process-spawn overhead and injection vectors.
+
+## 2026-07-12 - Environment and Arithmetic Input Validation in Installer Scripts
+**Vulnerability:** Shell installer scripts using external environment variables (`ANTIGRAVITY_REPO`, `ANTIGRAVITY_INSTALL_URL`) or dynamically computed terminal width/file sizes (`cols`, `current_size`, `total_size`) in arithmetic expressions `$(( ... ))` or external curl commands without character-level validation. This could allow malicious environment configurations to inject commands or arbitrary shell arithmetic code execution.
+**Learning:** Unsanitized variables inside shell arithmetic expansions are evaluated by Bash, enabling command execution. Environment-provided URLs or repos can also introduce option injections into tools like `curl`.
+**Prevention:** Validate environment-provided variables with strict character white-lists (using POSIX glob-based validation `[[ $VAR == *[!a-zA-Z0-9_.-]* ]]`) and ensure dynamically retrieved variables are strictly numeric before applying them in shell arithmetic expansions.
