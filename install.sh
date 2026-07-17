@@ -3,7 +3,16 @@
 set -Eeuo pipefail
 
 REPO="${ANTIGRAVITY_REPO:-wallentx/antigravity-cli-termux}"
+if [[ "$REPO" == *[!a-zA-Z0-9_./-]* ]]; then
+  printf "[ERR] Invalid ANTIGRAVITY_REPO: contains unsafe characters\n" >&2
+  exit 1
+fi
+
 URL="${ANTIGRAVITY_INSTALL_URL:-https://github.com/$REPO/releases/latest/download/antigravity-termux-standalone.tar.gz}"
+if [[ "$URL" == *[!a-zA-Z0-9_./:-]* ]]; then
+  printf "[ERR] Invalid ANTIGRAVITY_INSTALL_URL: contains unsafe characters\n" >&2
+  exit 1
+fi
 
 # ── Environment Detection ─────────────────────────────────────────────────────
 if [[ -z "${TERMUX_VERSION:-}" || -z "${PREFIX:-}" ]]; then
@@ -129,10 +138,11 @@ download_with_progress() {
 
   local total_size=""
   if head_out=$(curl -sLI -H "Cache-Control: no-cache" "$url" 2>/dev/null); then
-    total_size=$(echo "$head_out" | awk 'BEGIN{IGNORECASE=1} /^content-length:/{print $2}' | tail -n1 | tr -d '\r')
+    total_size=$(awk 'BEGIN{IGNORECASE=1} /^content-length:/{print $2}' <<< "$head_out" | tail -n1)
+    total_size="${total_size%$'\r'}"
   fi
 
-  if [[ ! "$total_size" =~ ^[0-9]+$ ]]; then
+  if [[ -z "$total_size" || "$total_size" == *[!0-9]* ]]; then
     curl -fLs -H "Cache-Control: no-cache" "$url" -o "$dest" >/dev/null 2>&1 &
     spinner $! "Downloading payload..."
     return $?
@@ -140,6 +150,7 @@ download_with_progress() {
 
   local cols
   cols=$(terminal_cols)
+  [[ -z "$cols" || "$cols" == *[!0-9]* ]] && cols=60
 
   local w=$(( cols - 38 ))
   (( w > 60 )) && w=60
@@ -156,6 +167,7 @@ download_with_progress() {
     if [[ -f "$dest" ]]; then
       current_size=$(wc -c < "$dest" 2>/dev/null || echo 0)
     fi
+    [[ -z "$current_size" || "$current_size" == *[!0-9]* ]] && current_size=0
 
     local pct=$(( total_size > 0 ? current_size * 100 / total_size : 0 ))
     (( pct > 100 )) && pct=100
@@ -198,6 +210,7 @@ TMP_LOGO=$(mktemp 2>/dev/null || echo "${HOME}/.local/.antigravity-logo.ans")
 if { curl -fLs -H "Cache-Control: no-cache" "https://raw.githubusercontent.com/${REPO}/dev/logo.ans" > "$TMP_LOGO" 2>/dev/null || curl -fLs -H "Cache-Control: no-cache" "https://raw.githubusercontent.com/Brajesh2022/antigravity-cli-termux/dev/logo.ans" > "$TMP_LOGO" 2>/dev/null; } && [[ -s "$TMP_LOGO" ]]; then
 
   COLS=$(terminal_cols)
+  [[ -z "$COLS" || "$COLS" == *[!0-9]* ]] && COLS=60
 
   awk -v cols="$COLS" -v arch="$(uname -m)" -v bold="${BOLD}${CYAN}" -v dim="${DIM}" -v grn="${GREEN}" -v rst="${RESET}" '
   {
