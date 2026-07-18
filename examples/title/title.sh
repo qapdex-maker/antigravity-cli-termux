@@ -1,17 +1,39 @@
 #!/bin/bash
 set -euo pipefail
 
+ jules-11360301565252093106-38c25a8c
 # Read JSON payload from stdin
 DATA=$(cat)
 
-# Extract fields using jq
+# Extract fields using jq and safely strip any carriage return (\r) characters
 {
   read -r STATE
   read -r CWD
 } <<< "$(jq -r '
   (.agent_state // "idle"),
   (.workspace.current_dir // "")
-' 2>/dev/null <<< "$DATA" || printf "idle\n\n")"
+' 2>/dev/null <<< "$DATA" | tr -d '\r' || printf "idle\n\n")"
+=======
+# Extract fields using jq
+# Performance Optimization (Bolt): stream stdin directly to jq to avoid spawning an external cat process and copying buffers.
+# We append a sentinel "END" line to ensure the read block never fails on empty/missing trailing fields.
+OUTPUT="$(jq -r '
+  (.agent_state // "idle"),
+  (.workspace.current_dir // ""),
+  "END"
+' 2>/dev/null || true)"
+
+# Fallback in case of empty input or parsing error
+if [[ -z "$OUTPUT" ]]; then
+  OUTPUT=$'idle\n\nEND'
+fi
+
+{
+  read -r STATE
+  read -r CWD
+  read -r _
+} <<< "$OUTPUT"
+ main
 
 # Try to extract CitC workspace name from CWD
 # Performance Optimization (Bolt): Avoid regex `=~` engine compilation and execution overhead by using pure Bash parameter expansion.
@@ -42,7 +64,7 @@ fi
 # Ensure variables are strictly validated and sanitized to prevent terminal/option injection.
 [[ "$STATE"      == *[!a-zA-Z0-9_-]* || -z "$STATE" ]] && STATE="idle"
 [[ "$WORKSPACE"  == *[!a-zA-Z0-9_./\ -]* || -z "$WORKSPACE" ]] && WORKSPACE="unknown"
-
+ jules-13866825955464836830-50397af9
 # Map state to emoji and polished label
 case "$STATE" in
   initializing) EMOJI="🚀"; LABEL="Initializing" ;;
@@ -71,6 +93,20 @@ case "$STATE" in
 esac
 
 TITLE="$EMOJI $LABEL | $WORKSPACE"
+=======
+# Map state to emoji and polished user-friendly label
+case "$STATE" in
+  initializing) EMOJI="🚀"; STATE_LABEL="Initializing" ;;
+  idle)         EMOJI="😴"; STATE_LABEL="Idle" ;;
+  thinking)     EMOJI="🤔"; STATE_LABEL="Thinking" ;;
+  working)      EMOJI="🏃"; STATE_LABEL="Working" ;;
+  tool_use)     EMOJI="🛠️"; STATE_LABEL="Using Tool" ;;
+  review)       EMOJI="👀"; STATE_LABEL="Reviewing" ;;
+  *)            EMOJI="🤖"; STATE_LABEL="Active" ;;
+esac
+
+TITLE="$EMOJI $STATE_LABEL | $WORKSPACE"
+ main
 
 # Print title safely to avoid option injection
 printf "%s\n" "$TITLE"

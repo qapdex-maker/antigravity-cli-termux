@@ -227,5 +227,29 @@ else
   # Narrow: compact two-line, minimal chrome
   # Include critical info (State, Model, Branch, Context, Sandbox)
   echo -e "${S}${M}${V}"
-  echo -e "${CTX}${DOT}${BG_FMT}${DOT}${SB}"
+  # Dynamically render only active stats (> 0) to avoid screen clutter on narrow Termux displays
+  STATS_LIST=""
+  if [ "$ARTIFACTS" -gt 0 ]; then
+    STATS_LIST="${ART_FMT}"
+  fi
+  if [ "$SUBAGENTS" -gt 0 ]; then
+    if [ -n "$STATS_LIST" ]; then
+      STATS_LIST="${STATS_LIST}${DOT}${SUB_FMT}"
+    else
+      STATS_LIST="${SUB_FMT}"
+    fi
+  fi
+  if [ "$BG_TASKS" -gt 0 ]; then
+    if [ -n "$STATS_LIST" ]; then
+      STATS_LIST="${STATS_LIST}${DOT}${BG_FMT}"
+    else
+      STATS_LIST="${BG_FMT}"
+    fi
+  fi
+
+  if [ -n "$STATS_LIST" ]; then
+    echo -e "${CTX}${DOT}${STATS_LIST}${DOT}${SB}"
+  else
+    echo -e "${CTX}${DOT}${SB}"
+  fi
 fi

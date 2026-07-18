@@ -10,6 +10,12 @@
 **Learning:** Relying solely on color for alerts (like high context-window usage) is not fully accessible. Pairing color changes with text or bar length transitions (such as dynamic truncation/scaling) provides multiple cognitive affordances. Moreover, aligning the color of numerical text with the bar warning color creates a strong unified visual highlight.
 **Action:** Always coordinate color highlights on numeric stats with associated warning progress bars, and pair visual-alert changes with size/layout adaptations.
 
+ jules-13866825955464836830-50397af9
 ## 2025-05-16 - Professionalizing CLI Window Titles via State Mapping
 **Learning:** Raw lowercase system/agent state keys (such as `tool_use`, `thinking`) can appear unpolished and machine-like to users. Mapping them to polished, title-cased labels (e.g., `Using Tool`, `Thinking`) in window titles significantly elevates the UI's look and feel, providing a highly polished, professional user interface.
 **Action:** Always translate internal system states or raw technical keys into clean, human-friendly presentation labels in CLI window headers.
+=======
+## 2025-07-17 - Cognitive Polishing & Dynamic Density in CLI Interfaces
+**Learning:** Raw system state codes (like `tool_use`) in terminal window titles create unnecessary cognitive friction. Mapping them to descriptive, title-cased labels (like "Using Tool") elevates UI professionalism. Furthermore, on extremely narrow Termux displays, dynamically filtering statusline metrics to display only active non-zero counters maintains high utility without triggering layout overflow or text wrapping.
+**Action:** Always map backend status keys to polished human-friendly string labels, and dynamically filter optional data fields under constrained screen widths.
+ main
