@@ -1,17 +1,25 @@
 #!/bin/bash
 set -euo pipefail
 
-# Read JSON payload from stdin
-DATA=$(cat)
-
 # Extract fields using jq
+# Performance Optimization (Bolt): stream stdin directly to jq to avoid spawning an external cat process and copying buffers.
+# We append a sentinel "END" line to ensure the read block never fails on empty/missing trailing fields.
+OUTPUT="$(jq -r '
+  (.agent_state // "idle"),
+  (.workspace.current_dir // ""),
+  "END"
+' 2>/dev/null || true)"
+
+# Fallback in case of empty input or parsing error
+if [[ -z "$OUTPUT" ]]; then
+  OUTPUT=$'idle\n\nEND'
+fi
+
 {
   read -r STATE
   read -r CWD
-} <<< "$(jq -r '
-  (.agent_state // "idle"),
-  (.workspace.current_dir // "")
-' 2>/dev/null <<< "$DATA" || printf "idle\n\n")"
+  read -r _
+} <<< "$OUTPUT"
 
 # Try to extract CitC workspace name from CWD
 # Performance Optimization (Bolt): Avoid regex `=~` engine compilation and execution overhead by using pure Bash parameter expansion.
