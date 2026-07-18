@@ -4,14 +4,14 @@ set -euo pipefail
 # Read JSON payload from stdin
 DATA=$(cat)
 
-# Extract fields using jq
+# Extract fields using jq and safely strip any carriage return (\r) characters
 {
   read -r STATE
   read -r CWD
 } <<< "$(jq -r '
   (.agent_state // "idle"),
   (.workspace.current_dir // "")
-' 2>/dev/null <<< "$DATA" || printf "idle\n\n")"
+' 2>/dev/null <<< "$DATA" | tr -d '\r' || printf "idle\n\n")"
 
 # Try to extract CitC workspace name from CWD
 # Performance Optimization (Bolt): Avoid regex `=~` engine compilation and execution overhead by using pure Bash parameter expansion.
