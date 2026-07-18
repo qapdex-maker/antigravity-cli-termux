@@ -9,3 +9,7 @@
 ## 2025-05-15 - Multi-Dimensional Color Affordance in CLI Interfaces
 **Learning:** Relying solely on color for alerts (like high context-window usage) is not fully accessible. Pairing color changes with text or bar length transitions (such as dynamic truncation/scaling) provides multiple cognitive affordances. Moreover, aligning the color of numerical text with the bar warning color creates a strong unified visual highlight.
 **Action:** Always coordinate color highlights on numeric stats with associated warning progress bars, and pair visual-alert changes with size/layout adaptations.
+
+## 2025-05-16 - Professionalizing CLI Window Titles via State Mapping
+**Learning:** Raw lowercase system/agent state keys (such as `tool_use`, `thinking`) can appear unpolished and machine-like to users. Mapping them to polished, title-cased labels (e.g., `Using Tool`, `Thinking`) in window titles significantly elevates the UI's look and feel, providing a highly polished, professional user interface.
+**Action:** Always translate internal system states or raw technical keys into clean, human-friendly presentation labels in CLI window headers.

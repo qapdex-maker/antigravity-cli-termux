@@ -43,18 +43,34 @@ fi
 [[ "$STATE"      == *[!a-zA-Z0-9_-]* || -z "$STATE" ]] && STATE="idle"
 [[ "$WORKSPACE"  == *[!a-zA-Z0-9_./\ -]* || -z "$WORKSPACE" ]] && WORKSPACE="unknown"
 
-# Map state to emoji
+# Map state to emoji and polished label
 case "$STATE" in
-  initializing) EMOJI="🚀" ;;
-  idle)         EMOJI="😴" ;;
-  thinking)     EMOJI="🤔" ;;
-  working)      EMOJI="🏃" ;;
-  tool_use)     EMOJI="🛠️" ;;
-  review)       EMOJI="👀" ;;
-  *)            EMOJI="🤖" ;;
+  initializing) EMOJI="🚀"; LABEL="Initializing" ;;
+  idle)         EMOJI="😴"; LABEL="Idle" ;;
+  thinking)     EMOJI="🤔"; LABEL="Thinking" ;;
+  working)      EMOJI="🏃"; LABEL="Working" ;;
+  tool_use)     EMOJI="🛠️"; LABEL="Using Tool" ;;
+  review)       EMOJI="👀"; LABEL="Review" ;;
+  *)            EMOJI="🤖"
+                # Fallback mapping: convert underscore to space, and capitalize first letter
+                # without spawning subshells or using Bash 4+ specific parameters
+                TEMP_STATE="${STATE//_/ }"
+                FIRST_CHAR="${TEMP_STATE:0:1}"
+                REST_CHARS="${TEMP_STATE:1}"
+                case "$FIRST_CHAR" in
+                  a) FIRST_CHAR="A" ;; b) FIRST_CHAR="B" ;; c) FIRST_CHAR="C" ;; d) FIRST_CHAR="D" ;;
+                  e) FIRST_CHAR="E" ;; f) FIRST_CHAR="F" ;; g) FIRST_CHAR="G" ;; h) FIRST_CHAR="H" ;;
+                  i) FIRST_CHAR="I" ;; j) FIRST_CHAR="J" ;; k) FIRST_CHAR="K" ;; l) FIRST_CHAR="L" ;;
+                  m) FIRST_CHAR="M" ;; n) FIRST_CHAR="N" ;; o) FIRST_CHAR="O" ;; p) FIRST_CHAR="P" ;;
+                  q) FIRST_CHAR="Q" ;; r) FIRST_CHAR="R" ;; s) FIRST_CHAR="S" ;; t) FIRST_CHAR="T" ;;
+                  u) FIRST_CHAR="U" ;; v) FIRST_CHAR="V" ;; w) FIRST_CHAR="W" ;; x) FIRST_CHAR="X" ;;
+                  y) FIRST_CHAR="Y" ;; z) FIRST_CHAR="Z" ;;
+                esac
+                LABEL="${FIRST_CHAR}${REST_CHARS}"
+                ;;
 esac
 
-TITLE="$EMOJI $STATE | $WORKSPACE"
+TITLE="$EMOJI $LABEL | $WORKSPACE"
 
 # Print title safely to avoid option injection
 printf "%s\n" "$TITLE"
