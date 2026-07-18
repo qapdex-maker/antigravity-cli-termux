@@ -9,3 +9,7 @@
 ## 2025-05-15 - Multi-Dimensional Color Affordance in CLI Interfaces
 **Learning:** Relying solely on color for alerts (like high context-window usage) is not fully accessible. Pairing color changes with text or bar length transitions (such as dynamic truncation/scaling) provides multiple cognitive affordances. Moreover, aligning the color of numerical text with the bar warning color creates a strong unified visual highlight.
 **Action:** Always coordinate color highlights on numeric stats with associated warning progress bars, and pair visual-alert changes with size/layout adaptations.
+
+## 2025-07-17 - Cognitive Polishing & Dynamic Density in CLI Interfaces
+**Learning:** Raw system state codes (like `tool_use`) in terminal window titles create unnecessary cognitive friction. Mapping them to descriptive, title-cased labels (like "Using Tool") elevates UI professionalism. Furthermore, on extremely narrow Termux displays, dynamically filtering statusline metrics to display only active non-zero counters maintains high utility without triggering layout overflow or text wrapping.
+**Action:** Always map backend status keys to polished human-friendly string labels, and dynamically filter optional data fields under constrained screen widths.

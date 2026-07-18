@@ -43,18 +43,18 @@ fi
 [[ "$STATE"      == *[!a-zA-Z0-9_-]* || -z "$STATE" ]] && STATE="idle"
 [[ "$WORKSPACE"  == *[!a-zA-Z0-9_./\ -]* || -z "$WORKSPACE" ]] && WORKSPACE="unknown"
 
-# Map state to emoji
+# Map state to emoji and polished user-friendly label
 case "$STATE" in
-  initializing) EMOJI="🚀" ;;
-  idle)         EMOJI="😴" ;;
-  thinking)     EMOJI="🤔" ;;
-  working)      EMOJI="🏃" ;;
-  tool_use)     EMOJI="🛠️" ;;
-  review)       EMOJI="👀" ;;
-  *)            EMOJI="🤖" ;;
+  initializing) EMOJI="🚀"; STATE_LABEL="Initializing" ;;
+  idle)         EMOJI="😴"; STATE_LABEL="Idle" ;;
+  thinking)     EMOJI="🤔"; STATE_LABEL="Thinking" ;;
+  working)      EMOJI="🏃"; STATE_LABEL="Working" ;;
+  tool_use)     EMOJI="🛠️"; STATE_LABEL="Using Tool" ;;
+  review)       EMOJI="👀"; STATE_LABEL="Reviewing" ;;
+  *)            EMOJI="🤖"; STATE_LABEL="Active" ;;
 esac
 
-TITLE="$EMOJI $STATE | $WORKSPACE"
+TITLE="$EMOJI $STATE_LABEL | $WORKSPACE"
 
 # Print title safely to avoid option injection
 printf "%s\n" "$TITLE"
