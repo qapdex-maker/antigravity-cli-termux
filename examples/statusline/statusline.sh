@@ -31,6 +31,28 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
 
 # ─── Parse JSON from stdin (Single jq pass for performance) ──────────────────
 # Extract all fields in one pass to prevent spawning jq 8 times.
+# We append a sentinel "END" line to ensure the read block never fails on empty/missing trailing fields.
+# We also use tr -d '\r' to strip carriage returns to prevent CRLF/terminal injection.
+OUTPUT="$(
+  jq -r '
+    (.agent_state // "idle"),
+    (.context_window.used_percentage // 0),
+    (.vcs.branch // ""),
+    (.vcs.dirty // false),
+    (.sandbox.enabled // false),
+    (.artifact_count // 0),
+    (if .subagents | type == "array" then (.subagents | length) else 0 end),
+    (.task_count // 0),
+    (.model.display_name // ""),
+    (.terminal_width // 80),
+    "END"
+  ' 2>/dev/null | tr -d '\r' || true
+)"
+
+if [[ -z "$OUTPUT" ]]; then
+  OUTPUT=$'idle\n0\n\nfalse\nfalse\n0\n0\n0\n\n80\nEND'
+fi
+
 {
   read -r STATE
   read -r USED_PCT
@@ -42,20 +64,8 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
   read -r BG_TASKS
   read -r MODEL
   read -r COLS
-} <<< "$(
-  jq -r '
-    (.agent_state // "idle"),
-    (.context_window.used_percentage // 0),
-    (.vcs.branch // ""),
-    (.vcs.dirty // false),
-    (.sandbox.enabled // false),
-    (.artifact_count // 0),
-    (if .subagents | type == "array" then (.subagents | length) else 0 end),
-    (.task_count // 0),
-    (.model.display_name // ""),
-    (.terminal_width // 80)
-  ' 2>/dev/null || printf "idle\n0\n\nfalse\nfalse\n0\n0\n0\n\n80\n"
-)"
+  read -r _
+} <<< "$OUTPUT"
 
 # ─── Input Validation & Sanitization ─────────────────────────────────────────
 # Ensure variables are strictly validated and sanitized to prevent terminal/option injection.
@@ -219,15 +229,15 @@ LINE2=" ${CTX}${DOT}${ART_FMT}${DOT}${SUB_FMT}${DOT}${BG_FMT}${DOT}${SB}"
 
 if [ "$COLS" -ge 120 ]; then
   # Wide: single line
-  echo -e "${LINE1}${FG_GRAY}  │  ${R}${LINE2}"
+  printf "%b\n" "${LINE1}${FG_GRAY}  │  ${R}${LINE2}"
 elif [ "$COLS" -ge 80 ]; then
   # Medium: two-line layout with border
-  echo -e "${FG_GRAY}╭─${R} ${LINE1}"
-  echo -e "${FG_GRAY}╰─${R}${LINE2}"
+  printf "%b\n" "${FG_GRAY}╭─${R} ${LINE1}"
+  printf "%b\n" "${FG_GRAY}╰─${R}${LINE2}"
 else
   # Narrow: compact two-line, minimal chrome
   # Include critical info (State, Model, Branch, Context, Sandbox)
-  echo -e "${S}${M}${V}"
+  printf "%b\n" "${S}${M}${V}"
   # Dynamically render only active stats (> 0) to avoid screen clutter on narrow Termux displays
   STATS_LIST=""
   if [ "$ARTIFACTS" -gt 0 ]; then
@@ -249,8 +259,8 @@ else
   fi
 
   if [ -n "$STATS_LIST" ]; then
-    echo -e "${CTX}${DOT}${STATS_LIST}${DOT}${SB}"
+    printf "%b\n" "${CTX}${DOT}${STATS_LIST}${DOT}${SB}"
   else
-    echo -e "${CTX}${DOT}${SB}"
+    printf "%b\n" "${CTX}${DOT}${SB}"
   fi
 fi
