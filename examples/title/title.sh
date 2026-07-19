@@ -60,6 +60,9 @@ case "$STATE" in
   working)      EMOJI="🏃"; LABEL="Working" ;;
   tool_use)     EMOJI="🛠️"; LABEL="Using Tool" ;;
   review)       EMOJI="👀"; LABEL="Review" ;;
+  paused)       EMOJI="⏸️"; LABEL="Paused" ;;
+  completed|success) EMOJI="✅"; LABEL="Completed" ;;
+  failed|error)      EMOJI="❌"; LABEL="Failed" ;;
   *)            EMOJI="🤖"
                 # Fallback mapping: convert underscore to space, and capitalize first letter
                 # without spawning subshells or using Bash 4+ specific parameters

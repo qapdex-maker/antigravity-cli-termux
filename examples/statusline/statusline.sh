@@ -99,6 +99,9 @@ case "$STATE" in
   working)      S="${FG_BRIGHT_CYAN}${B}⚙ WORKING${R}" ;;
   tool_use)     S="${FG_BRIGHT_MAGENTA}${B}🔧 TOOL${R}" ;;
   review)       S="${FG_BRIGHT_BLUE}${B}👀 REVIEW${R}" ;;
+  paused)       S="${FG_BRIGHT_YELLOW}${B}⏸️ PAUSED${R}" ;;
+  completed|success) S="${FG_BRIGHT_GREEN}${B}✅ COMPLETED${R}" ;;
+  failed|error)      S="${FG_BRIGHT_RED}${B}❌ FAILED${R}" ;;
   *)            # Performance Optimization (Bolt): Pure Bash transliteration to uppercase avoids fork/exec overhead.
                 # Avoids `${STATE^^}` for compatibility with older Bash versions (like Bash 3.2 on macOS).
                 UPPER_STATE="$STATE"
@@ -209,7 +212,11 @@ fi
 # ─── Stats ───────────────────────────────────────────────────────────────────
 # Match context percentage text color with warning color for high usage (red/yellow/white)
 CTX_PCT_COLOR="${BAR_COLOR}${B}"
-CTX="${FG_GRAY}ctx ${BAR_COLOR}${BAR} ${CTX_PCT_COLOR}${PCT_FMT}%${R}"
+CTX_WARNING=""
+if [ "$PCT_INT" -ge 90 ]; then
+  CTX_WARNING=" ⚠️"
+fi
+CTX="${FG_GRAY}ctx ${BAR_COLOR}${BAR} ${CTX_PCT_COLOR}${PCT_FMT}%${CTX_WARNING}${R}"
 
 # Dim zeros for better visual hierarchy without spawning subshells
 ART_COLOR="$FG_GRAY"; [ "$ARTIFACTS" -gt 0 ] && ART_COLOR="$NUM_COLOR"
