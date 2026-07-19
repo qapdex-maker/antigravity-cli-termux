@@ -19,3 +19,8 @@
 **Vulnerability:** Shell installer scripts using external environment variables (`ANTIGRAVITY_REPO`, `ANTIGRAVITY_INSTALL_URL`) or dynamically computed terminal width/file sizes (`cols`, `current_size`, `total_size`) in arithmetic expressions `$(( ... ))` or external curl commands without character-level validation. This could allow malicious environment configurations to inject commands or arbitrary shell arithmetic code execution.
 **Learning:** Unsanitized variables inside shell arithmetic expansions are evaluated by Bash, enabling command execution. Environment-provided URLs or repos can also introduce option injections into tools like `curl`.
 **Prevention:** Validate environment-provided variables with strict character white-lists (using POSIX glob-based validation `[[ $VAR == *[!a-zA-Z0-9_.-]* ]]`) and ensure dynamically retrieved variables are strictly numeric before applying them in shell arithmetic expansions.
+
+## 2026-07-19 - CRLF Carriage Return Stripping for Robust Shell Parsing
+**Vulnerability:** Untrusted JSON payloads containing Windows-style CRLF (`\r\n`) line endings can lead to carriage returns (`\r`) being preserved inside Bash variables, causing hidden control character injection, validation bypasses, or terminal output corruption.
+**Learning:** When multiline outputs from JSON tools (like `jq`) are piped into `read` blocks, trailing carriage returns are not automatically stripped by Bash and persist in parsed variable values.
+**Prevention:** Always filter intermediate command outputs or JSON-parsed streams through `tr -d '\r'` before reading them into shell variables.
