@@ -17,3 +17,7 @@
 ## 2025-07-17 - Cognitive Polishing & Dynamic Density in CLI Interfaces
 **Learning:** Raw system state codes (like `tool_use`) in terminal window titles create unnecessary cognitive friction. Mapping them to descriptive, title-cased labels (like "Using Tool") elevates UI professionalism. Furthermore, on extremely narrow Termux displays, dynamically filtering statusline metrics to display only active non-zero counters maintains high utility without triggering layout overflow or text wrapping.
 **Action:** Always map backend status keys to polished human-friendly string labels, and dynamically filter optional data fields under constrained screen widths.
+
+## 2025-10-24 - Multi-Dimensional Affordances for Security Indicators in CLI Environments
+**Learning:** For critical safety/security status indicators (such as Sandbox mode), communicating the active or inactive state solely through simple colored text or a monochrome "on/off" label is highly error-prone and inaccessible (e.g., to color-blind users or distracted operators). Coupling status transitions with highly distinct lock/unlock symbols (🔒 vs 🔓) and using strong semantic contrast (bold green ON vs bold red OFF) provides redundant, highly recognizable visual cues across multiple dimensions (shape/glypht, color, textual casing).
+**Action:** Pair critical state transitions with contrasting emojis/symbols and distinct semantic colors to build highly accessible, fault-tolerant terminal dashboard elements.

@@ -165,9 +165,9 @@ fi
 
 # ─── Sandbox Badge ───────────────────────────────────────────────────────────
 if [ "$SANDBOX" = "true" ]; then
-  SB="${FG_GRAY}sandbox ${FG_BRIGHT_GREEN}${B}ON${R}"
+  SB="${FG_GRAY}sandbox ${FG_BRIGHT_GREEN}${B}🔒 ON${R}"
 else
-  SB="${FG_GRAY}sandbox off${R}"
+  SB="${FG_GRAY}sandbox ${FG_BRIGHT_RED}${B}🔓 OFF${R}"
 fi
 
 # ─── Context Bar (dynamic width based on screen width, fine-grain Unicode) ───
