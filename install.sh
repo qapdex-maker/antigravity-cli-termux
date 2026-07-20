@@ -138,8 +138,17 @@ download_with_progress() {
 
   local total_size=""
   if head_out=$(curl -sLI -H "Cache-Control: no-cache" "$url" 2>/dev/null); then
-    total_size=$(awk 'BEGIN{IGNORECASE=1} /^content-length:/{print $2}' <<< "$head_out" | tail -n1)
-    total_size="${total_size%$'\r'}"
+    # Performance Optimization (Bolt): Parse Content-Length in pure Bash
+    # to avoid the fork/exec overhead of spawning the external awk command.
+    while IFS= read -r line; do
+      line="${line%$'\r'}"
+      if [[ "$line" == [Cc][Oo][Nn][Tt][Ee][Nn][Tt]-[Ll][Ee][Nn][Gg][Tt][Hh]:* ]]; then
+        local val="${line#*:}"
+        # Strip leading whitespace
+        val="${val#"${val%%[![:space:]]*}"}"
+        total_size="$val"
+      fi
+    done <<< "$head_out"
   fi
 
   if [[ -z "$total_size" || "$total_size" == *[!0-9]* ]]; then
@@ -212,34 +221,46 @@ if { curl -fLs -H "Cache-Control: no-cache" "https://raw.githubusercontent.com/$
   COLS=$(terminal_cols)
   [[ -z "$COLS" || "$COLS" == *[!0-9]* ]] && COLS=60
 
-  awk -v cols="$COLS" -v arch="$(uname -m)" -v bold="${BOLD}${CYAN}" -v dim="${DIM}" -v grn="${GREEN}" -v rst="${RESET}" '
-  {
-    sub(/\r$/, "");
+  # Performance Optimization (Bolt): Format and output the logo in pure Bash
+  # to avoid the fork/exec overhead of spawning the external awk command.
+  logo_lines=()
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    logo_lines+=("${line%$'\r'}")
+  done < "$TMP_LOGO"
 
-    if (cols >= 48) {
-      printf "%s", $0;
-      if (NR == 3)      printf "\033[28G %sAntigravity Termux%s", bold, rst;
-      else if (NR == 4) printf "\033[28G %sStandalone Installer%s", dim, rst;
-      else if (NR == 5) printf "\033[28G %s────────────────────%s", dim, rst;
-      else if (NR == 6) printf "\033[28G %sTarget:%s  Termux", dim, rst;
-      else if (NR == 7) printf "\033[28G %sArch:%s    %s", dim, rst, arch;
-      else if (NR == 8) printf "\033[28G %sStatus:%s  %sOnline%s", dim, rst, grn, rst;
-      printf "\n";
-    } else {
-      print $0;
-    }
-  }
-  END {
-    if (cols < 48) {
-      printf "\n";
-      printf "  %sAntigravity Termux%s\n", bold, rst;
-      printf "  %sStandalone Installer%s\n", dim, rst;
-      printf "  %s────────────────────%s\n", dim, rst;
-      printf "  %sTarget:%s  Termux\n", dim, rst;
-      printf "  %sArch:%s    %s\n", dim, rst, arch;
-      printf "  %sStatus:%s  %sOnline%s\n", dim, rst, grn, rst;
-    }
-  }' "$TMP_LOGO"
+  for ((i=0; i<${#logo_lines[@]}; i++)); do
+    line="${logo_lines[i]}"
+    nr=$((i+1))
+    if [ "$COLS" -ge 48 ]; then
+      printf "%s" "$line"
+      if [ "$nr" -eq 3 ]; then
+        printf "\033[28G %sAntigravity Termux%s" "${BOLD}${CYAN}" "${RESET}"
+      elif [ "$nr" -eq 4 ]; then
+        printf "\033[28G %sStandalone Installer%s" "${DIM}" "${RESET}"
+      elif [ "$nr" -eq 5 ]; then
+        printf "\033[28G %s────────────────────%s" "${DIM}" "${RESET}"
+      elif [ "$nr" -eq 6 ]; then
+        printf "\033[28G %sTarget:%s  Termux" "${DIM}" "${RESET}"
+      elif [ "$nr" -eq 7 ]; then
+        printf "\033[28G %sArch:%s    %s" "${DIM}" "${RESET}" "$(uname -m)"
+      elif [ "$nr" -eq 8 ]; then
+        printf "\033[28G %sStatus:%s  %sOnline%s" "${DIM}" "${RESET}" "${GREEN}" "${RESET}"
+      fi
+      printf "\n"
+    else
+      printf "%s\n" "$line"
+    fi
+  done
+
+  if [ "$COLS" -lt 48 ]; then
+    printf "\n"
+    printf "  %sAntigravity Termux%s\n" "${BOLD}${CYAN}" "${RESET}"
+    printf "  %sStandalone Installer%s\n" "${DIM}" "${RESET}"
+    printf "  %s────────────────────%s\n" "${DIM}" "${RESET}"
+    printf "  %sTarget:%s  Termux\n" "${DIM}" "${RESET}"
+    printf "  %sArch:%s    %s\n" "${DIM}" "${RESET}" "$(uname -m)"
+    printf "  %sStatus:%s  %sOnline%s\n" "${DIM}" "${RESET}" "${GREEN}" "${RESET}"
+  fi
 
   rm -f "$TMP_LOGO"
 else
