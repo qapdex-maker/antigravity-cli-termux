@@ -8,17 +8,19 @@ set -euo pipefail
 OUTPUT="$(jq -r '
   (.agent_state // "idle"),
   (.workspace.current_dir // ""),
+  (.sandbox.enabled // false),
   "END"
 ' 2>/dev/null | tr -d '\r' || true)"
 
 # Fallback in case of empty input or parsing error
 if [[ -z "$OUTPUT" ]]; then
-  OUTPUT=$'idle\n\nEND'
+  OUTPUT=$'idle\n\nfalse\nEND'
 fi
 
 {
   read -r STATE
   read -r CWD
+  read -r SANDBOX
   read -r _
 } <<< "$OUTPUT"
 
@@ -51,6 +53,7 @@ fi
 # Ensure variables are strictly validated and sanitized to prevent terminal/option injection.
 [[ "$STATE"      == *[!a-zA-Z0-9_-]* || -z "$STATE" ]] && STATE="idle"
 [[ "$WORKSPACE"  == *[!a-zA-Z0-9_./\ -]* || -z "$WORKSPACE" ]] && WORKSPACE="unknown"
+[[ "$SANDBOX"    != "true" && "$SANDBOX" != "false" ]] && SANDBOX="false"
 
 # Map state to emoji and polished label
 case "$STATE" in
@@ -82,7 +85,14 @@ case "$STATE" in
                 ;;
 esac
 
-TITLE="$EMOJI $LABEL | 📁 $WORKSPACE"
+# Build multi-dimensional safety visual cue since color is not supported in typical window titles
+if [ "$SANDBOX" = "true" ]; then
+  SB_TXT=" (🔒 Sandbox ON)"
+else
+  SB_TXT=" (🔓 Sandbox OFF)"
+fi
+
+TITLE="$EMOJI $LABEL | $WORKSPACE$SB_TXT"
 
 # Print title safely to avoid option injection
 printf "%s\n" "$TITLE"

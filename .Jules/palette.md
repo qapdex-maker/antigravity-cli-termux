@@ -21,3 +21,7 @@
 ## 2025-10-24 - Multi-Dimensional Affordances for Security Indicators in CLI Environments
 **Learning:** For critical safety/security status indicators (such as Sandbox mode), communicating the active or inactive state solely through simple colored text or a monochrome "on/off" label is highly error-prone and inaccessible (e.g., to color-blind users or distracted operators). Coupling status transitions with highly distinct lock/unlock symbols (🔒 vs 🔓) and using strong semantic contrast (bold green ON vs bold red OFF) provides redundant, highly recognizable visual cues across multiple dimensions (shape/glypht, color, textual casing).
 **Action:** Pair critical state transitions with contrasting emojis/symbols and distinct semantic colors to build highly accessible, fault-tolerant terminal dashboard elements.
+
+## 2025-10-25 - Multi-Dimensional Safety Cues in Color-Constrained Environments (CLI Title)
+**Learning:** Standard terminal window titles do not support ANSI color escape sequences or complex styles, making color-based safety indicators impossible. For critical environments like Sandboxes, appending distinct text badges with rich glyphs (e.g., `(🔒 Sandbox ON)` vs `(🔓 Sandbox OFF)`) inside the window title ensures high accessibility and clear visual verification of safety status directly from the desktop/taskbar window title.
+**Action:** Use rich emoji-symbol pairings along with descriptive text badges in window titles to convey critical/security status in color-constrained terminal host environments.
