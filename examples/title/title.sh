@@ -82,7 +82,7 @@ case "$STATE" in
                 ;;
 esac
 
-TITLE="$EMOJI $LABEL | $WORKSPACE"
+TITLE="$EMOJI $LABEL | 📁 $WORKSPACE"
 
 # Print title safely to avoid option injection
 printf "%s\n" "$TITLE"

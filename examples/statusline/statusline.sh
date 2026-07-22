@@ -94,7 +94,7 @@ PCT_INT=${USED_PCT%.*}; PCT_INT=${PCT_INT:-0}
 # ─── State Indicator (No background colors) ──────────────────────────────────
 case "$STATE" in
   initializing) S="${FG_BRIGHT_CYAN}${B}🚀 INIT${R}" ;;
-  idle)         S="${FG_BRIGHT_GREEN}${B}● READY${R}" ;;
+  idle)         S="${FG_BRIGHT_GREEN}${B}🟢 READY${R}" ;;
   thinking)     S="${FG_BRIGHT_YELLOW}${B}◆ THINKING${R}" ;;
   working)      S="${FG_BRIGHT_CYAN}${B}⚙ WORKING${R}" ;;
   tool_use)     S="${FG_BRIGHT_MAGENTA}${B}🔧 TOOL${R}" ;;
@@ -144,9 +144,9 @@ if [ -n "$VCS_BRANCH" ]; then
   fi
 
   if [ "$VCS_DIRTY" = "true" ]; then
-    V="${FG_GRAY} ╱ ${FG_BRIGHT_RED}${DISPLAY_BRANCH}${FG_BRIGHT_YELLOW}*${R}"
+    V="${FG_GRAY} ╱ ${FG_BRIGHT_RED}🌿 ${DISPLAY_BRANCH}${FG_BRIGHT_YELLOW}*${R}"
   else
-    V="${FG_GRAY} ╱ ${FG_BRIGHT_BLUE}${DISPLAY_BRANCH}${R}"
+    V="${FG_GRAY} ╱ ${FG_BRIGHT_BLUE}🌿 ${DISPLAY_BRANCH}${R}"
   fi
 fi
 
@@ -159,7 +159,7 @@ if [ -n "$MODEL" ]; then
     if [ "$COLS" -lt 80 ] && [ "${#MODEL}" -gt 15 ]; then
       DISPLAY_MODEL="${MODEL:0:9}...${MODEL: -3}"
     fi
-    M="${FG_GRAY} ╱ ${FG_BRIGHT_MAGENTA}${I}${DISPLAY_MODEL}${R}"
+    M="${FG_GRAY} ╱ ${FG_BRIGHT_MAGENTA}${I}🧠 ${DISPLAY_MODEL}${R}"
   fi
 fi
 
@@ -216,16 +216,16 @@ CTX_WARNING=""
 if [ "$PCT_INT" -ge 90 ]; then
   CTX_WARNING=" ⚠️"
 fi
-CTX="${FG_GRAY}ctx ${BAR_COLOR}${BAR} ${CTX_PCT_COLOR}${PCT_FMT}%${CTX_WARNING}${R}"
+CTX="${FG_GRAY}📊 ctx ${BAR_COLOR}${BAR} ${CTX_PCT_COLOR}${PCT_FMT}%${CTX_WARNING}${R}"
 
 # Dim zeros for better visual hierarchy without spawning subshells
 ART_COLOR="$FG_GRAY"; [ "$ARTIFACTS" -gt 0 ] && ART_COLOR="$NUM_COLOR"
 SUB_COLOR="$FG_GRAY"; [ "$SUBAGENTS" -gt 0 ] && SUB_COLOR="$NUM_COLOR"
 TAS_COLOR="$FG_GRAY"; [ "$BG_TASKS" -gt 0 ] && TAS_COLOR="$NUM_COLOR"
 
-ART_FMT="${FG_GRAY}artifacts ${ART_COLOR}${ARTIFACTS}${R}"
-SUB_FMT="${FG_GRAY}subagents ${SUB_COLOR}${SUBAGENTS}${R}"
-BG_FMT="${FG_GRAY}tasks ${TAS_COLOR}${BG_TASKS}${R}"
+ART_FMT="${FG_GRAY}📦 artifacts ${ART_COLOR}${ARTIFACTS}${R}"
+SUB_FMT="${FG_GRAY}👥 subagents ${SUB_COLOR}${SUBAGENTS}${R}"
+BG_FMT="${FG_GRAY}📋 tasks ${TAS_COLOR}${BG_TASKS}${R}"
 
 # ─── Separators ──────────────────────────────────────────────────────────────
 DOT="${FG_GRAY} · ${R}"

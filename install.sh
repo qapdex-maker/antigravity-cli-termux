@@ -7,10 +7,18 @@ if [[ "$REPO" == *[!a-zA-Z0-9_./-]* ]]; then
   printf "[ERR] Invalid ANTIGRAVITY_REPO: contains unsafe characters\n" >&2
   exit 1
 fi
+if [[ "$REPO" == -* ]]; then
+  printf "[ERR] Invalid ANTIGRAVITY_REPO: cannot start with a dash\n" >&2
+  exit 1
+fi
 
 URL="${ANTIGRAVITY_INSTALL_URL:-https://github.com/$REPO/releases/latest/download/antigravity-termux-standalone.tar.gz}"
 if [[ "$URL" == *[!a-zA-Z0-9_./:-]* ]]; then
   printf "[ERR] Invalid ANTIGRAVITY_INSTALL_URL: contains unsafe characters\n" >&2
+  exit 1
+fi
+if [[ "$URL" == -* ]]; then
+  printf "[ERR] Invalid ANTIGRAVITY_INSTALL_URL: cannot start with a dash\n" >&2
   exit 1
 fi
 
@@ -137,24 +145,29 @@ download_with_progress() {
   printf "\033[?25l" # Hide cursor
 
   local total_size=""
-  # Performance Optimization (Bolt): Replace external awk & tail pipeline with pure Bash multiline parsing loop.
-  # This prevents subshell spawns and executes up to 70x faster, particularly in Termux.
-  if head_out=$(curl -sLI -H "Cache-Control: no-cache" -- "$url" 2>/dev/null); then
+ bolt-optimize-content-length-6186268205215886832
+  if head_out=$(curl -sLI -H "Cache-Control: no-cache" "$url" 2>/dev/null); then
+    # Performance Optimization (Bolt): Pure Bash loop over $head_out prevents slow external process spawning (awk and tail).
+    # Runs ~70x faster, avoiding CPU and memory overhead on mobile/Termux systems.
     while read -r line; do
       line="${line%$'\r'}"
       case "$line" in
         [Cc][Oo][Nn][Tt][Ee][Nn][Tt]-[Ll][Ee][Nn][Gg][Tt][Hh]:*)
-          local val="${line#*:}"
-          val="${val#${val%%[![:space:]]*}}" # strip leading whitespace
-          val="${val%${val##*[![:space:]]}}" # strip trailing whitespace
-          total_size="$val"
+          total_size="${line#*:}"
+          # Strip leading and trailing whitespace
+          total_size="${total_size#"${total_size%%[![:space:]]*}"}"
+          total_size="${total_size%"${total_size##*[![:space:]]}"}"
           ;;
       esac
     done <<< "$head_out"
+  if head_out=$(curl -sLI -H "Cache-Control: no-cache" -- "$url" 2>/dev/null); then
+    total_size=$(awk 'BEGIN{IGNORECASE=1} /^content-length:/{print $2}' <<< "$head_out" | tail -n1)
+    total_size="${total_size%$'\r'}"
+ main
   fi
 
   if [[ -z "$total_size" || "$total_size" == *[!0-9]* ]]; then
-    curl -fLs -H "Cache-Control: no-cache" "$url" -o "$dest" >/dev/null 2>&1 &
+    curl -fLs -H "Cache-Control: no-cache" -o "$dest" -- "$url" >/dev/null 2>&1 &
     spinner $! "Downloading payload..."
     return $?
   fi
@@ -167,7 +180,7 @@ download_with_progress() {
   (( w > 60 )) && w=60
   (( w < 10 )) && w=10
 
-  curl -fLs -H "Cache-Control: no-cache" "$url" -o "$dest" >/dev/null 2>&1 &
+  curl -fLs -H "Cache-Control: no-cache" -o "$dest" -- "$url" >/dev/null 2>&1 &
   local pid=$!
 
   local full_bar="████████████████████████████████████████████████████████████"
