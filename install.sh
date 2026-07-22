@@ -3,8 +3,8 @@
 set -Eeuo pipefail
 
 REPO="${ANTIGRAVITY_REPO:-wallentx/antigravity-cli-termux}"
-if [[ "$REPO" == *[!a-zA-Z0-9_./-]* ]]; then
-  printf "[ERR] Invalid ANTIGRAVITY_REPO: contains unsafe characters\n" >&2
+if [[ "$REPO" == -* || "$REPO" == *[!a-zA-Z0-9_./-]* ]]; then
+  printf "[ERR] Invalid ANTIGRAVITY_REPO: contains unsafe characters or starts with a dash\n" >&2
   exit 1
 fi
 if [[ "$REPO" == -* ]]; then
@@ -13,8 +13,8 @@ if [[ "$REPO" == -* ]]; then
 fi
 
 URL="${ANTIGRAVITY_INSTALL_URL:-https://github.com/$REPO/releases/latest/download/antigravity-termux-standalone.tar.gz}"
-if [[ "$URL" == *[!a-zA-Z0-9_./:-]* ]]; then
-  printf "[ERR] Invalid ANTIGRAVITY_INSTALL_URL: contains unsafe characters\n" >&2
+if [[ "$URL" == -* || "$URL" == *[!a-zA-Z0-9_./:-]* ]]; then
+  printf "[ERR] Invalid ANTIGRAVITY_INSTALL_URL: contains unsafe characters or starts with a dash\n" >&2
   exit 1
 fi
 if [[ "$URL" == -* ]]; then
@@ -231,7 +231,7 @@ download_with_progress() {
 echo ""
 TMP_LOGO=$(mktemp 2>/dev/null || echo "${HOME}/.local/.antigravity-logo.ans")
 
-if { curl -fLs -H "Cache-Control: no-cache" "https://raw.githubusercontent.com/${REPO}/dev/logo.ans" > "$TMP_LOGO" 2>/dev/null || curl -fLs -H "Cache-Control: no-cache" "https://raw.githubusercontent.com/Brajesh2022/antigravity-cli-termux/dev/logo.ans" > "$TMP_LOGO" 2>/dev/null; } && [[ -s "$TMP_LOGO" ]]; then
+if { curl -fLs -H "Cache-Control: no-cache" -- "https://raw.githubusercontent.com/${REPO}/dev/logo.ans" > "$TMP_LOGO" 2>/dev/null || curl -fLs -H "Cache-Control: no-cache" -- "https://raw.githubusercontent.com/Brajesh2022/antigravity-cli-termux/dev/logo.ans" > "$TMP_LOGO" 2>/dev/null; } && [[ -s "$TMP_LOGO" ]]; then
 
   COLS=$(terminal_cols)
   [[ -z "$COLS" || "$COLS" == *[!0-9]* ]] && COLS=60
