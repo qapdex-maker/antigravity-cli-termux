@@ -160,7 +160,6 @@ download_with_progress() {
           ;;
       esac
     done <<< "$head_out"
-=======
   if head_out=$(curl -sLI -H "Cache-Control: no-cache" -- "$url" 2>/dev/null); then
     total_size=$(awk 'BEGIN{IGNORECASE=1} /^content-length:/{print $2}' <<< "$head_out" | tail -n1)
     total_size="${total_size%$'\r'}"
