@@ -145,10 +145,10 @@ download_with_progress() {
   printf "\033[?25l" # Hide cursor
 
   local total_size=""
- bolt-optimize-content-length-6186268205215886832
-  if head_out=$(curl -sLI -H "Cache-Control: no-cache" "$url" 2>/dev/null); then
+  if head_out=$(curl -sLI -H "Cache-Control: no-cache" -- "$url" 2>/dev/null); then
     # Performance Optimization (Bolt): Pure Bash loop over $head_out prevents slow external process spawning (awk and tail).
     # Runs ~70x faster, avoiding CPU and memory overhead on mobile/Termux systems.
+    # Security Enhancement (Sentinel): Uses '--' to terminate curl options and prevent option injection.
     while read -r line; do
       line="${line%$'\r'}"
       case "$line" in
@@ -160,10 +160,6 @@ download_with_progress() {
           ;;
       esac
     done <<< "$head_out"
-  if head_out=$(curl -sLI -H "Cache-Control: no-cache" -- "$url" 2>/dev/null); then
-    total_size=$(awk 'BEGIN{IGNORECASE=1} /^content-length:/{print $2}' <<< "$head_out" | tail -n1)
-    total_size="${total_size%$'\r'}"
- main
   fi
 
   if [[ -z "$total_size" || "$total_size" == *[!0-9]* ]]; then
