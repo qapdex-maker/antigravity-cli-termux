@@ -29,45 +29,48 @@ FG_BRIGHT_WHITE="\033[97m"
 # Number Highlight Color
 NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
 
-# ─── Parse JSON from stdin (Single jq pass for performance) ──────────────────
+# ─── Parse JSON safely using jq and null delimiters to prevent line-injection vulnerabilities. ───
 # Extract all fields in one pass to prevent spawning jq 8 times.
-# We append a sentinel "END" line to ensure the read block never fails on empty/missing trailing fields.
-# We also use pure Bash parameter expansion later to strip carriage returns (avoiding extra 'tr' process overhead and preventing CRLF/terminal injection).
-OUTPUT="$(
-  jq -r '
-    (.agent_state // "idle"),
-    (.context_window.used_percentage // 0),
-    (.vcs.branch // ""),
-    (.vcs.dirty // false),
-    (.sandbox.enabled // false),
-    (.artifact_count // 0),
-    (if .subagents | type == "array" then (.subagents | length) else 0 end),
-    (.task_count // 0),
-    (.model.display_name // ""),
-    (.terminal_width // 80),
-    "END"
-  ' 2>/dev/null || true
-)"
-
-OUTPUT="${OUTPUT//$'\r'/}"
-
-if [[ -z "$OUTPUT" ]]; then
-  OUTPUT=$'idle\n0\n\nfalse\nfalse\n0\n0\n0\n\n80\nEND'
-fi
-
+# We append a sentinel "END" field to ensure the read block never fails on empty/missing trailing fields.
+# We also use tr -d '\r' to strip carriage returns to prevent CRLF/terminal injection.
+# Security Enhancement (Sentinel): Transitioning to null delimiters avoids field misalignment on embedded newlines.
 {
-  read -r STATE
-  read -r USED_PCT
-  read -r VCS_BRANCH
-  read -r VCS_DIRTY
-  read -r SANDBOX
-  read -r ARTIFACTS
-  read -r SUBAGENTS
-  read -r BG_TASKS
-  read -r MODEL
-  read -r COLS
-  read -r _
-} <<< "$OUTPUT"
+  read -d '' -r STATE || true
+  read -d '' -r USED_PCT || true
+  read -d '' -r VCS_BRANCH || true
+  read -d '' -r VCS_DIRTY || true
+  read -d '' -r SANDBOX || true
+  read -d '' -r ARTIFACTS || true
+  read -d '' -r SUBAGENTS || true
+  read -d '' -r BG_TASKS || true
+  read -d '' -r MODEL || true
+  read -d '' -r COLS || true
+  read -d '' -r _ || true
+} < <(jq -j '
+  (.agent_state // "idle"), "\u0000",
+  (.context_window.used_percentage // 0), "\u0000",
+  (.vcs.branch // ""), "\u0000",
+  (.vcs.dirty // false), "\u0000",
+  (.sandbox.enabled // false), "\u0000",
+  (.artifact_count // 0), "\u0000",
+  (if .subagents | type == "array" then (.subagents | length) else 0 end), "\u0000",
+  (.task_count // 0), "\u0000",
+  (.model.display_name // ""), "\u0000",
+  (.terminal_width // 80), "\u0000",
+  "END\u0000"
+' 2>/dev/null | tr -d '\r')
+
+# Fallback in case of empty input or parsing error
+[[ -z "$STATE" ]] && STATE="idle"
+[[ -z "$USED_PCT" ]] && USED_PCT=0
+[[ -z "$VCS_BRANCH" ]] && VCS_BRANCH=""
+[[ -z "$VCS_DIRTY" ]] && VCS_DIRTY="false"
+[[ -z "$SANDBOX" ]] && SANDBOX="false"
+[[ -z "$ARTIFACTS" ]] && ARTIFACTS=0
+[[ -z "$SUBAGENTS" ]] && SUBAGENTS=0
+[[ -z "$BG_TASKS" ]] && BG_TASKS=0
+[[ -z "$MODEL" ]] && MODEL=""
+[[ -z "$COLS" ]] && COLS=80
 
 # ─── Input Validation & Sanitization ─────────────────────────────────────────
 # Ensure variables are strictly validated and sanitized to prevent terminal/option injection.
