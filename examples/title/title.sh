@@ -4,13 +4,15 @@ set -euo pipefail
 # Extract fields using jq
 # Performance Optimization (Bolt): stream stdin directly to jq to avoid spawning an external cat process and copying buffers.
 # We append a sentinel "END" line to ensure the read block never fails on empty/missing trailing fields.
-# We also use tr -d '\r' to strip carriage returns to prevent CRLF/terminal injection.
+# We also use pure Bash parameter expansion later to strip carriage returns (avoiding extra 'tr' process overhead and preventing CRLF/terminal injection).
 OUTPUT="$(jq -r '
   (.agent_state // "idle"),
   (.workspace.current_dir // ""),
   (.sandbox.enabled // false),
   "END"
-' 2>/dev/null | tr -d '\r' || true)"
+' 2>/dev/null || true)"
+
+OUTPUT="${OUTPUT//$'\r'/}"
 
 # Fallback in case of empty input or parsing error
 if [[ -z "$OUTPUT" ]]; then
