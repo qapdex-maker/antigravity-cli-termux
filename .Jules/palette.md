@@ -25,3 +25,7 @@
 ## 2025-10-25 - Multi-Dimensional Safety Cues in Color-Constrained Environments (CLI Title)
 **Learning:** Standard terminal window titles do not support ANSI color escape sequences or complex styles, making color-based safety indicators impossible. For critical environments like Sandboxes, appending distinct text badges with rich glyphs (e.g., `(🔒 Sandbox ON)` vs `(🔓 Sandbox OFF)`) inside the window title ensures high accessibility and clear visual verification of safety status directly from the desktop/taskbar window title.
 **Action:** Use rich emoji-symbol pairings along with descriptive text badges in window titles to convey critical/security status in color-constrained terminal host environments.
+
+## 2025-10-26 - Emoji Compatibility and Visual Alignment Across CLI Output Environments
+**Learning:** Different monospaced terminal fonts and mobile host environments (such as Termux) may not correctly render less common Unicode icons (such as the gear `⚙` symbol), causing visual corruption. Aligning state emojis (e.g., using `🏃` for working across both statusline and window title) ensures reliable cross-platform rendering and visual coherence. Additionally, pairing color-only warnings (like PATH red alerts) with distinct multi-dimensional visual cues (like `⚠️`) improves accessibility for color-blind users and screen readers.
+**Action:** Align status emojis across statusline and title components, use common high-compatibility emojis, and supplement color-coded alerts with visual warning glyphs.

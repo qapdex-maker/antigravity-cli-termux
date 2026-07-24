@@ -365,7 +365,7 @@ case ":$PATH:" in
   *":$INSTALL_BIN_DIR:"*) ;;
   *)
     cat >&2 <<EOF
-${RED}${BOLD}Warning:${RESET} ${BOLD}$INSTALL_BIN_DIR${RESET} is not in PATH for this shell.
+⚠️  ${RED}${BOLD}Warning:${RESET} ${BOLD}$INSTALL_BIN_DIR${RESET} is not in PATH for this shell.
 Please add this to your shell profile (e.g., ~/.bashrc or ~/.zshrc):
 
   export PATH="$INSTALL_BIN_DIR:\$PATH"
