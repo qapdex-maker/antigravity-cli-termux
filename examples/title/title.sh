@@ -1,28 +1,27 @@
 #!/bin/bash
 set -euo pipefail
 
-# Extract fields using jq
+# Extract fields safely using jq and null delimiters to prevent line-injection vulnerabilities.
 # Performance Optimization (Bolt): stream stdin directly to jq to avoid spawning an external cat process and copying buffers.
-# We append a sentinel "END" line to ensure the read block never fails on empty/missing trailing fields.
+# We append a sentinel "END" field to ensure the read block never fails on empty/missing trailing fields.
 # We also use tr -d '\r' to strip carriage returns to prevent CRLF/terminal injection.
-OUTPUT="$(jq -r '
-  (.agent_state // "idle"),
-  (.workspace.current_dir // ""),
-  (.sandbox.enabled // false),
-  "END"
-' 2>/dev/null | tr -d '\r' || true)"
+# Security Enhancement (Sentinel): Transitioning to null delimiters avoids field misalignment on embedded newlines.
+{
+  read -d '' -r STATE || true
+  read -d '' -r CWD || true
+  read -d '' -r SANDBOX || true
+  read -d '' -r _ || true
+} < <(jq -j '
+  (.agent_state // "idle"), "\u0000",
+  (.workspace.current_dir // ""), "\u0000",
+  (.sandbox.enabled // false), "\u0000",
+  "END\u0000"
+' 2>/dev/null | tr -d '\r')
 
 # Fallback in case of empty input or parsing error
-if [[ -z "$OUTPUT" ]]; then
-  OUTPUT=$'idle\n\nfalse\nEND'
-fi
-
-{
-  read -r STATE
-  read -r CWD
-  read -r SANDBOX
-  read -r _
-} <<< "$OUTPUT"
+[[ -z "$STATE" ]] && STATE="idle"
+[[ -z "$CWD" ]] && CWD=""
+[[ -z "$SANDBOX" ]] && SANDBOX="false"
 
 # Try to extract CitC workspace name from CWD
 # Performance Optimization (Bolt): Avoid regex `=~` engine compilation and execution overhead by using pure Bash parameter expansion.
