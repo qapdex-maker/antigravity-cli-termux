@@ -32,7 +32,7 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
 # ─── Parse JSON from stdin (Single jq pass for performance) ──────────────────
 # Extract all fields in one pass to prevent spawning jq 8 times.
 # We append a sentinel "END" line to ensure the read block never fails on empty/missing trailing fields.
-# We also use tr -d '\r' to strip carriage returns to prevent CRLF/terminal injection.
+# We also use pure Bash parameter expansion later to strip carriage returns (avoiding extra 'tr' process overhead and preventing CRLF/terminal injection).
 OUTPUT="$(
   jq -r '
     (.agent_state // "idle"),
@@ -46,8 +46,10 @@ OUTPUT="$(
     (.model.display_name // ""),
     (.terminal_width // 80),
     "END"
-  ' 2>/dev/null | tr -d '\r' || true
+  ' 2>/dev/null || true
 )"
+
+OUTPUT="${OUTPUT//$'\r'/}"
 
 if [[ -z "$OUTPUT" ]]; then
   OUTPUT=$'idle\n0\n\nfalse\nfalse\n0\n0\n0\n\n80\nEND'
