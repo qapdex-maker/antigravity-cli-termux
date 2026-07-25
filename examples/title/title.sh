@@ -57,10 +57,10 @@ fi
 # Map state to emoji and polished label
 case "$STATE" in
   initializing) EMOJI="🚀"; LABEL="Initializing" ;;
-  idle)         EMOJI="😴"; LABEL="Idle" ;;
+  idle)         EMOJI="🟢"; LABEL="Idle" ;;
   thinking)     EMOJI="🤔"; LABEL="Thinking" ;;
   working)      EMOJI="🏃"; LABEL="Working" ;;
-  tool_use)     EMOJI="🛠️"; LABEL="Using Tool" ;;
+  tool_use)     EMOJI="🔧"; LABEL="Using Tool" ;;
   review)       EMOJI="👀"; LABEL="Review" ;;
   paused)       EMOJI="⏸️"; LABEL="Paused" ;;
   completed|success) EMOJI="✅"; LABEL="Completed" ;;
