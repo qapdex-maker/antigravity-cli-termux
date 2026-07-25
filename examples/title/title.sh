@@ -16,7 +16,13 @@ set -euo pipefail
   (.workspace.current_dir // ""), "\u0000",
   (.sandbox.enabled // false), "\u0000",
   "END\u0000"
-' 2>/dev/null | tr -d '\r')
+' 2>/dev/null)
+
+# Performance Optimization (Bolt): Pure Bash parameter expansion ${VAR//$'\r'/} replaces
+# the external process pipeline | tr -d '\r', removing process spawn overhead in high-frequency title rendering.
+STATE="${STATE//$'\r'/}"
+CWD="${CWD//$'\r'/}"
+SANDBOX="${SANDBOX//$'\r'/}"
 
 # Fallback in case of empty input or parsing error
 [[ -z "$STATE" ]] && STATE="idle"
