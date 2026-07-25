@@ -37,6 +37,12 @@ EOF
   exit 1
 fi
 
+# Security Enhancement (Sentinel): Validate PREFIX to prevent option/command injection and path traversal
+if [[ "$PREFIX" == -* || "$PREFIX" == *[!a-zA-Z0-9_./-]* ]]; then
+  printf "[ERR] Invalid PREFIX: contains unsafe characters or starts with a dash\n" >&2
+  exit 1
+fi
+
 ENV_TYPE="termux"
 TERMUX_PREFIX="$PREFIX"
 INSTALL_BIN_DIR="${TERMUX_PREFIX}/bin"
