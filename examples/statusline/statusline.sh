@@ -58,7 +58,20 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
   (.model.display_name // ""), "\u0000",
   (.terminal_width // 80), "\u0000",
   "END\u0000"
-' 2>/dev/null | tr -d '\r')
+' 2>/dev/null)
+
+# Performance Optimization (Bolt): Pure Bash parameter expansion ${VAR//$'\r'/} replaces
+# the external process pipeline | tr -d '\r', removing process spawn overhead in high-frequency statusline rendering.
+STATE="${STATE//$'\r'/}"
+USED_PCT="${USED_PCT//$'\r'/}"
+VCS_BRANCH="${VCS_BRANCH//$'\r'/}"
+VCS_DIRTY="${VCS_DIRTY//$'\r'/}"
+SANDBOX="${SANDBOX//$'\r'/}"
+ARTIFACTS="${ARTIFACTS//$'\r'/}"
+SUBAGENTS="${SUBAGENTS//$'\r'/}"
+BG_TASKS="${BG_TASKS//$'\r'/}"
+MODEL="${MODEL//$'\r'/}"
+COLS="${COLS//$'\r'/}"
 
 # Fallback in case of empty input or parsing error
 [[ -z "$STATE" ]] && STATE="idle"
