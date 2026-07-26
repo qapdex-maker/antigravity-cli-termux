@@ -11,3 +11,7 @@
 ## 2026-07-22 - [Process Pipeline Elimination in HTTP Header Parsing]
 **Learning:** Replacing external process pipelines (such as `awk` and `tail`) with pure Bash alternatives (like a `while read -r` loop combined with a standard case-insensitive `case` statement) to parse multiline string content (e.g. HTTP response headers) prevents subshell spawns and executes up to 70x faster, particularly on resource-constrained environments like Termux.
 **Action:** Use pure Bash multiline parsing loops and parameter expansions for string trimming/extraction instead of piping through external command line utilities like `awk` or `tail`.
+
+## 2026-07-26 - [Avoid Repeated Command Probing in Tight Loops]
+**Learning:** Running a fallback chain of command flags (such as trying Linux vs BSD `stat` syntax) inside high-frequency progress bar loops causes massive overhead. On systems where the first option fails, it executes two process spawns on every iteration instead of one.
+**Action:** Probe the correct command options once before the loop (e.g. on `/dev/null`) and cache the flags to prevent unnecessary process spawns inside tight loops.
