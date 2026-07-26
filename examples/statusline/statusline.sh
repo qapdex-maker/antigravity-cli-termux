@@ -102,10 +102,19 @@ fi
 [[ "$MODEL"      == *[!a-zA-Z0-9_./\ -]* ]] && MODEL=""
 [[ "$COLS"       == *[!0-9]* || -z "$COLS" ]] && COLS=80
 
+# Strip leading zeros to prevent Bash octal arithmetic/comparison issues (e.g. 08, 09)
+ARTIFACTS="${ARTIFACTS#${ARTIFACTS%%[!0]*}}"; ARTIFACTS="${ARTIFACTS:-0}"
+SUBAGENTS="${SUBAGENTS#${SUBAGENTS%%[!0]*}}"; SUBAGENTS="${SUBAGENTS:-0}"
+BG_TASKS="${BG_TASKS#${BG_TASKS%%[!0]*}}";   BG_TASKS="${BG_TASKS:-0}"
+COLS="${COLS#${COLS%%[!0]*}}";               COLS="${COLS:-80}"
+
 # ─── Computed Values ─────────────────────────────────────────────────────────
 # Use LC_NUMERIC=C and printf -v to prevent fork overhead and locale errors
 LC_NUMERIC=C printf -v PCT_FMT "%.1f" "$USED_PCT"
 PCT_INT=${USED_PCT%.*}; PCT_INT=${PCT_INT:-0}
+# Strip leading zeros to prevent Bash octal arithmetic/comparison issues
+PCT_INT="${PCT_INT#${PCT_INT%%[!0]*}}"
+PCT_INT="${PCT_INT:-0}"
 # Performance Optimization (Bolt): Use pure Bash character-class validation to avoid regex overhead.
 [[ -z "$PCT_INT" || "$PCT_INT" == *[!0-9]* ]] && PCT_INT=0
 

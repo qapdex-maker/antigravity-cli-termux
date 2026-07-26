@@ -168,6 +168,10 @@ download_with_progress() {
     done <<< "$head_out"
   fi
 
+  # Strip leading zeros to prevent Bash octal arithmetic interpretation error (e.g. 08500000)
+  total_size="${total_size#${total_size%%[!0]*}}"
+  total_size="${total_size:-0}"
+
   if [[ -z "$total_size" || "$total_size" == *[!0-9]* ]]; then
     curl -fLs -H "Cache-Control: no-cache" -o "$dest" -- "$url" >/dev/null 2>&1 &
     spinner $! "Downloading payload..."
