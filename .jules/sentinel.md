@@ -29,3 +29,8 @@
 **Vulnerability:** Multi-field JSON outputs parsed by Bash using standard newline-delimited `read` blocks can be manipulated if any field contains embedded newlines (such as directory or git branch names), shifting succeeding lines and overriding critical system state variables like sandbox status.
 **Learning:** Standard line-by-line `read` blocks assume fields never contain newlines. A malicious branch name with newlines can craft input that overrides variables parsed after it.
 **Prevention:** Always output fields null-delimited (using `jq -j` and `\u0000`) and consume them safely with `read -d '' -r`.
+
+## 2026-07-23 - Bash Octal Arithmetic Interpretation and Bypass Vulnerability via Leading Zeros
+**Vulnerability:** Numeric strings parsed from JSON or external sources containing leading zeros (e.g. "08", "09") trigger "value too great for base" errors inside Bash double-bracket comparisons (`[[ ... ]]`) and arithmetic expansions (`$(( ... ))`). This can cause script execution to halt, fallback behavior to fail, or bypass validation checks entirely.
+**Learning:** Bash treats any numeric literal with a leading zero as an octal value. Characters `8` and `9` are invalid in octal, resulting in shell crashes or unexpected validation behavior.
+**Prevention:** Always sanitize numeric variables by stripping leading zeros using pure Bash parameter expansion (`val="${val#${val%%[!0]*}}"`, then defaulting to a safe fallback like `0`) before using them in comparisons or arithmetic expansions.
