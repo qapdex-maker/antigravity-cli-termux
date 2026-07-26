@@ -97,15 +97,15 @@ else
 fi
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
-info()    { printf '%b\n' " ${CYAN}[..]${RESET} ${DIM}$*${RESET}"; }
-ok()      { printf '%b\n' " ${GREEN}[OK]${RESET} $*"; }
+info()    { printf '%b\n' " ℹ️  ${CYAN}[..]${RESET} ${DIM}$*${RESET}"; }
+ok()      { printf '%b\n' " ✅ ${GREEN}[OK]${RESET} $*"; }
 die() {
   {
     printf "\033[?25h" # Restore cursor
     if [[ $# -gt 0 ]]; then
-      printf '\n%b\n' " ${RED}[ERR]${RESET} $*"
+      printf '\n%b\n' " ❌ ${RED}[ERR]${RESET} $*"
     else
-      printf '\n%b\n' " ${RED}[ERR]${RESET} Installation failed or was cancelled."
+      printf '\n%b\n' " ❌ ${RED}[ERR]${RESET} Installation failed or was cancelled."
     fi
     printf "For manual patching and installation:\n"
     printf "%bhttps://gist.github.com/Brajesh2022/e42160d29b55417db6c18c52dd1d6d37%b\n\n" "$CYAN" "$RESET"
@@ -136,9 +136,9 @@ spinner() {
   local exit_status=0
   wait "$pid" || exit_status=$?
   if [ $exit_status -eq 0 ]; then
-    printf "\r\033[K %b[OK]%b %s\n" "$GREEN" "$RESET" "$msg"
+    printf "\r\033[K ✅ %b[OK]%b %s\n" "$GREEN" "$RESET" "$msg"
   else
-    printf "\r\033[K %b[ERR]%b %s\n" "$RED" "$RESET" "$msg"
+    printf "\r\033[K ❌ %b[ERR]%b %s\n" "$RED" "$RESET" "$msg"
   fi
   printf "\033[?25h" # Show cursor
   return $exit_status
@@ -224,10 +224,10 @@ download_with_progress() {
     local bar="${full_bar:0:w}"
     local t_mb_i=$(( total_size / 1048576 ))
     local t_mb_d=$(( (total_size * 10 / 1048576) % 10 ))
-    printf "\r\033[K %b[OK]%b [%s] 100%% %b%5d.%dM / %4d.%dM%b\n" \
+    printf "\r\033[K ✅ %b[OK]%b [%s] 100%% %b%5d.%dM / %4d.%dM%b\n" \
       "$GREEN" "$RESET" "$bar" "$DIM" "$t_mb_i" "$t_mb_d" "$t_mb_i" "$t_mb_d" "$RESET"
   else
-    printf "\r\033[K %b[ERR]%b Download failed.\n" "$RED" "$RESET"
+    printf "\r\033[K ❌ %b[ERR]%b Download failed.\n" "$RED" "$RESET"
   fi
 
   printf "\033[?25h" # Restore cursor
