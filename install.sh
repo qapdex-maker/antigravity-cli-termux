@@ -186,6 +186,14 @@ download_with_progress() {
   (( w > 60 )) && w=60
   (( w < 10 )) && w=10
 
+  # Performance Optimization (Bolt): Probe the correct stat format flags once to avoid falling back repeatedly in the loop.
+  local stat_format=""
+  if stat -L -c "%s" /dev/null >/dev/null 2>&1; then
+    stat_format="-L -c %s"
+  elif stat -L -f "%z" /dev/null >/dev/null 2>&1; then
+    stat_format="-L -f %z"
+  fi
+
   curl -fLs -H "Cache-Control: no-cache" -o "$dest" -- "$url" >/dev/null 2>&1 &
   local pid=$!
 
@@ -195,8 +203,14 @@ download_with_progress() {
   while kill -0 "$pid" 2>/dev/null; do
     local current_size=0
     if [[ -f "$dest" ]]; then
-      # Performance Optimization (Bolt): Using `stat` is ~1.5x faster than `wc -c` as it reads only metadata instead of the whole file.
-      current_size=$(stat -L -c "%s" "$dest" 2>/dev/null || stat -L -f "%z" "$dest" 2>/dev/null || echo 0)
+      # Performance Optimization (Bolt): Use the pre-probed stat flags directly. This avoids spawning failing commands
+      # and eliminates extra process spawns/fallback evaluation overhead in high-frequency rendering.
+      if [[ -n "$stat_format" ]]; then
+        # shellcheck disable=SC2086
+        current_size=$(stat $stat_format "$dest" 2>/dev/null || echo 0)
+      else
+        current_size=0
+      fi
     fi
     [[ -z "$current_size" || "$current_size" == *[!0-9]* ]] && current_size=0
 
