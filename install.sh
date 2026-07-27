@@ -182,6 +182,10 @@ download_with_progress() {
   cols=$(terminal_cols)
   [[ -z "$cols" || "$cols" == *[!0-9]* ]] && cols=60
 
+  # Strip leading zeros to prevent Bash octal arithmetic interpretation error (e.g. 08, 09)
+  cols="${cols#${cols%%[!0]*}}"
+  cols="${cols:-60}"
+
   local w=$(( cols - 38 ))
   (( w > 60 )) && w=60
   (( w < 10 )) && w=10
@@ -213,6 +217,10 @@ download_with_progress() {
       fi
     fi
     [[ -z "$current_size" || "$current_size" == *[!0-9]* ]] && current_size=0
+
+    # Strip leading zeros to prevent Bash octal arithmetic interpretation error (e.g. 08, 09)
+    current_size="${current_size#${current_size%%[!0]*}}"
+    current_size="${current_size:-0}"
 
     local pct=$(( total_size > 0 ? current_size * 100 / total_size : 0 ))
     (( pct > 100 )) && pct=100
@@ -256,6 +264,10 @@ if { curl -fLs -H "Cache-Control: no-cache" -- "https://raw.githubusercontent.co
 
   COLS=$(terminal_cols)
   [[ -z "$COLS" || "$COLS" == *[!0-9]* ]] && COLS=60
+
+  # Strip leading zeros to prevent Bash octal arithmetic interpretation error (e.g. 08, 09)
+  COLS="${COLS#${COLS%%[!0]*}}"
+  COLS="${COLS:-60}"
 
   awk -v cols="$COLS" -v arch="$(uname -m)" -v bold="${BOLD}${CYAN}" -v dim="${DIM}" -v grn="${GREEN}" -v rst="${RESET}" '
   {
