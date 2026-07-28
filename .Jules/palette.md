@@ -29,3 +29,7 @@
 ## 2025-10-26 - Emoji Compatibility and Visual Alignment Across CLI Output Environments
 **Learning:** Different monospaced terminal fonts and mobile host environments (such as Termux) may not correctly render less common Unicode icons (such as the gear `⚙` symbol), causing visual corruption. Aligning state emojis (e.g., using `🏃` for working across both statusline and window title) ensures reliable cross-platform rendering and visual coherence. Additionally, pairing color-only warnings (like PATH red alerts) with distinct multi-dimensional visual cues (like `⚠️`) improves accessibility for color-blind users and screen readers.
 **Action:** Align status emojis across statusline and title components, use common high-compatibility emojis, and supplement color-coded alerts with visual warning glyphs.
+
+## 2025-10-27 - Mobile CLI Density & Compact Metric Iconography
+**Learning:** On narrow terminal displays (like Termux under 80 columns), displaying verbose text labels next to statistics leads to severe text wrapping and layout overflow. By conditionally omitting the textual labels (e.g. "artifacts", "subagents", "tasks") and displaying only the highly recognizable icons (e.g. 📦, 👥, 📋) and their values, the interface remains extremely compact and perfectly readable without layout corruption.
+**Action:** Use conditional label rendering in terminal statuslines based on screen width, prioritizing standard iconography over full text.

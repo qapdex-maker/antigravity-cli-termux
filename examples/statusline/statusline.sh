@@ -191,10 +191,16 @@ if [ -n "$MODEL" ]; then
 fi
 
 # ─── Sandbox Badge ───────────────────────────────────────────────────────────
-if [ "$SANDBOX" = "true" ]; then
-  SB="${FG_GRAY}sandbox ${FG_BRIGHT_GREEN}${B}🔒 ON${R}"
+if [ "$COLS" -lt 80 ]; then
+  SB_LABEL=""
 else
-  SB="${FG_GRAY}sandbox ${FG_BRIGHT_RED}${B}🔓 OFF${R}"
+  SB_LABEL="sandbox "
+fi
+
+if [ "$SANDBOX" = "true" ]; then
+  SB="${FG_GRAY}${SB_LABEL}${FG_BRIGHT_GREEN}${B}🔒 ON${R}"
+else
+  SB="${FG_GRAY}${SB_LABEL}${FG_BRIGHT_RED}${B}🔓 OFF${R}"
 fi
 
 # ─── Context Bar (dynamic width based on screen width, fine-grain Unicode) ───
@@ -250,9 +256,15 @@ ART_COLOR="$FG_GRAY"; [ "$ARTIFACTS" -gt 0 ] && ART_COLOR="$NUM_COLOR"
 SUB_COLOR="$FG_GRAY"; [ "$SUBAGENTS" -gt 0 ] && SUB_COLOR="$NUM_COLOR"
 TAS_COLOR="$FG_GRAY"; [ "$BG_TASKS" -gt 0 ] && TAS_COLOR="$NUM_COLOR"
 
-ART_FMT="${FG_GRAY}📦 artifacts ${ART_COLOR}${ARTIFACTS}${R}"
-SUB_FMT="${FG_GRAY}👥 subagents ${SUB_COLOR}${SUBAGENTS}${R}"
-BG_FMT="${FG_GRAY}📋 tasks ${TAS_COLOR}${BG_TASKS}${R}"
+if [ "$COLS" -lt 80 ]; then
+  ART_FMT="${FG_GRAY}📦 ${ART_COLOR}${ARTIFACTS}${R}"
+  SUB_FMT="${FG_GRAY}👥 ${SUB_COLOR}${SUBAGENTS}${R}"
+  BG_FMT="${FG_GRAY}📋 ${TAS_COLOR}${BG_TASKS}${R}"
+else
+  ART_FMT="${FG_GRAY}📦 artifacts ${ART_COLOR}${ARTIFACTS}${R}"
+  SUB_FMT="${FG_GRAY}👥 subagents ${SUB_COLOR}${SUBAGENTS}${R}"
+  BG_FMT="${FG_GRAY}📋 tasks ${TAS_COLOR}${BG_TASKS}${R}"
+fi
 
 # ─── Separators ──────────────────────────────────────────────────────────────
 DOT="${FG_GRAY} · ${R}"
