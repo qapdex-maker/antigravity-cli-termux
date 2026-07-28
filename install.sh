@@ -204,6 +204,11 @@ download_with_progress() {
   local full_bar="████████████████████████████████████████████████████████████"
   local empty_bar="░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
 
+  # Performance Optimization (Bolt): Pre-calculate the total size in megabytes outside the progress bar
+  # loop to avoid redundant divisions, multiplication, and modulo operations on every 150ms tick.
+  local t_mb_i=$(( total_size / 1048576 ))
+  local t_mb_d=$(( (total_size * 10 / 1048576) % 10 ))
+
   while kill -0 "$pid" 2>/dev/null; do
     local current_size=0
     if [[ -f "$dest" ]]; then
@@ -229,8 +234,6 @@ download_with_progress() {
 
     local c_mb_i=$(( current_size / 1048576 ))
     local c_mb_d=$(( (current_size * 10 / 1048576) % 10 ))
-    local t_mb_i=$(( total_size / 1048576 ))
-    local t_mb_d=$(( (total_size * 10 / 1048576) % 10 ))
 
     # Optimized rendering using pure Bash (removes awk overhead)
     printf "\r\033[K %b[..]%b [%s] %3d%% %b%5d.%dM / %4d.%dM%b" \
