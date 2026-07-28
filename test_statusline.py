@@ -68,6 +68,26 @@ def main():
     assert "🔒 ON" in stdout or "🔓 OFF" in stdout, "Expected sandbox lock icon state in narrow output"
     print("✅ 50 cols (narrow) uses 2 lines and correctly uses compact representation (no text labels).")
 
+    # 4. Test new agent states: cancelled, stopped, interrupted
+    payload_cancelled = payload.copy()
+    payload_cancelled["agent_state"] = "cancelled"
+    stdout_c, _, code_c = run_statusline(payload_cancelled, 80)
+    assert code_c == 0
+    assert "CANCELLED" in stdout_c or "🛑" in stdout_c, "Expected 'CANCELLED' state in statusline"
+
+    payload_stopped = payload.copy()
+    payload_stopped["agent_state"] = "stopped"
+    stdout_s, _, code_s = run_statusline(payload_stopped, 80)
+    assert code_s == 0
+    assert "STOPPED" in stdout_s or "🛑" in stdout_s, "Expected 'STOPPED' state in statusline"
+
+    payload_interrupted = payload.copy()
+    payload_interrupted["agent_state"] = "interrupted"
+    stdout_i, _, code_i = run_statusline(payload_interrupted, 80)
+    assert code_i == 0
+    assert "STOPPED" in stdout_i or "🛑" in stdout_i, "Expected 'STOPPED' state in statusline"
+    print("✅ New cancelled, stopped, and interrupted states are verified.")
+
     print("All tests passed successfully!")
 
 if __name__ == '__main__':
