@@ -71,6 +71,8 @@ case "$STATE" in
   paused)       EMOJI="⏸️"; LABEL="Paused" ;;
   completed|success) EMOJI="✅"; LABEL="Completed" ;;
   failed|error)      EMOJI="❌"; LABEL="Failed" ;;
+  cancelled)         EMOJI="🛑"; LABEL="Cancelled" ;;
+  stopped|interrupted) EMOJI="🛑"; LABEL="Stopped" ;;
   *)            EMOJI="🤖"
                 # Fallback mapping: convert underscore to space, and capitalize first letter
                 # without spawning subshells or using Bash 4+ specific parameters
