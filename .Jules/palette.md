@@ -33,3 +33,7 @@
 ## 2025-10-27 - Mobile CLI Density & Compact Metric Iconography
 **Learning:** On narrow terminal displays (like Termux under 80 columns), displaying verbose text labels next to statistics leads to severe text wrapping and layout overflow. By conditionally omitting the textual labels (e.g. "artifacts", "subagents", "tasks") and displaying only the highly recognizable icons (e.g. 📦, 👥, 📋) and their values, the interface remains extremely compact and perfectly readable without layout corruption.
 **Action:** Use conditional label rendering in terminal statuslines based on screen width, prioritizing standard iconography over full text.
+
+## 2026-07-29 - Actionable Installer Guidance on Missing Dependencies
+**Learning:** Augmenting missing dependency or environmental checks in installer terminal scripts with exact, copy-pasteable command resolutions (e.g. `pkg install jq` or `pkg install ca-certificates` on Termux) replaces ambiguous errors with actionable, self-documenting guidance to greatly reduce setup friction.
+**Action:** When a prerequisite or binary check fails in a CLI setup script, always append the exact commands required to install or set up that dependency to minimize user cognitive overhead.
