@@ -46,12 +46,16 @@ fi
 ENV_TYPE="termux"
 TERMUX_PREFIX="$PREFIX"
 INSTALL_BIN_DIR="${TERMUX_PREFIX}/bin"
-TMP="${TERMUX_PREFIX}/tmp/antigravity-termux-standalone.tar.gz"
-EXTRACT_DIR="${TERMUX_PREFIX}/tmp/.antigravity-extract"
-INSTALL_SUCCESS=0
 
-# Ensure base directories exist for fresh setups
-mkdir -p "$(dirname "$TMP")" 2>/dev/null || true
+# Security Enhancement (Sentinel): Securely generate a temporary directory to prevent symlink attacks and race conditions (CWE-377 / CWE-59)
+# Use a restricted mode (0700) for security.
+SECURE_TMP_DIR=$(mktemp -d "${TERMUX_PREFIX}/tmp/antigravity-install.XXXXXX" 2>/dev/null || mktemp -d 2>/dev/null || echo "${TERMUX_PREFIX}/tmp/antigravity-install.$$")
+mkdir -p "$SECURE_TMP_DIR" 2>/dev/null || true
+chmod 700 "$SECURE_TMP_DIR" 2>/dev/null || true
+
+TMP="${SECURE_TMP_DIR}/antigravity-termux-standalone.tar.gz"
+EXTRACT_DIR="${SECURE_TMP_DIR}/.antigravity-extract"
+INSTALL_SUCCESS=0
 
 # ── Cleanup Hook ──────────────────────────────────────────────────────────────
 cleanup() {
@@ -60,6 +64,7 @@ cleanup() {
   [[ -d "$EXTRACT_DIR" ]] && rm -rf "$EXTRACT_DIR"
   if [[ "${INSTALL_SUCCESS:-0}" -ne 1 ]]; then
     [[ -f "$TMP" ]] && rm -f "$TMP"
+    [[ -d "${SECURE_TMP_DIR:-}" ]] && rm -rf "$SECURE_TMP_DIR"
     if [[ -n "${ANTIGRAVITY_BAK:-}" && -f "$ANTIGRAVITY_BAK" ]]; then
       mv -f "$ANTIGRAVITY_BAK" "$INSTALL_BIN_DIR/antigravity" || true
     fi
@@ -347,7 +352,7 @@ fi
 ok "Environment: ${ENV_TYPE} (aarch64)"
 
 # ── Clean previous install ────────────────────────────────────────────────────
-mkdir -p "$INSTALL_BIN_DIR" "$(dirname "$TMP")" 2>/dev/null
+mkdir -p "$INSTALL_BIN_DIR" 2>/dev/null
 rm -rf "$EXTRACT_DIR"
 mkdir -p "$EXTRACT_DIR"
 

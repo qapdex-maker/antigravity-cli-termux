@@ -34,3 +34,8 @@
 **Vulnerability:** Numeric strings parsed from JSON or external sources containing leading zeros (e.g. "08", "09") trigger "value too great for base" errors inside Bash double-bracket comparisons (`[[ ... ]]`) and arithmetic expansions (`$(( ... ))`). This can cause script execution to halt, fallback behavior to fail, or bypass validation checks entirely.
 **Learning:** Bash treats any numeric literal with a leading zero as an octal value. Characters `8` and `9` are invalid in octal, resulting in shell crashes or unexpected validation behavior.
 **Prevention:** Always sanitize numeric variables by stripping leading zeros using pure Bash parameter expansion (`val="${val#${val%%[!0]*}}"`, then defaulting to a safe fallback like `0`) before using them in comparisons or arithmetic expansions.
+
+## 2026-07-25 - Insecure Temporary File Creation and Symlink Attack Vulnerability
+**Vulnerability:** Use of predictable, hardcoded temporary file paths and extraction directories in a shared `/tmp` directory.
+**Learning:** Using hardcoded paths for temporary files or directories (such as `TMP` and `EXTRACT_DIR` inside `/tmp` or `${PREFIX}/tmp`) makes the script vulnerable to symlink attacks, arbitrary file overwriting, and race conditions (CWE-377, CWE-59) by other local users on a shared system.
+**Prevention:** Always use `mktemp -d` to securely create a unique temporary directory with restricted `0700` permissions (readable/writable only by the owner), and place all temporary files and extraction directories within it.
