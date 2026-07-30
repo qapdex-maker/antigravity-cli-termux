@@ -19,3 +19,7 @@
 ## 2026-07-28 - [Ultra-Fast and Safe Leading-Zero Stripping via Base-10 Arithmetic]
 **Learning:** Replacing slow, nested parameter expansions (e.g. `${VAR#${VAR%%[!0]*}}`) used to strip leading zeros in Bash (to avoid octal errors) with native base-10 arithmetic expansions yields a 2.6x performance speedup. However, raw `$((10#$VAR))` will crash with a syntax error if `$VAR` is empty or unset.
 **Action:** Always use the robust `$((10#0$VAR))` pattern, prepending a `0` to the variable, which guarantees safe evaluation to `0` even if the variable is empty or unset.
+
+## 2026-07-30 - [Multi-Byte Character Slicing and Locale Sensitivity in Bash]
+**Learning:** Using pure Bash string slicing `${VAR:offset:length}` on multi-byte UTF-8 character maps (such as `·░▒▓` used for sub-character progress bar rendering) is highly locale-dependent. In byte-based locales like `C` or `POSIX` (often default in automated environments/CI pipelines), Bash operates on raw bytes, leading to garbled and corrupted terminal outputs due to slicing through multi-byte character sequences.
+**Action:** Avoid micro-optimizations that slice multi-byte UTF-8 character strings in Bash. Always prefer standard `if-elif` conditional blocks to assign multi-byte UTF-8 characters robustly.

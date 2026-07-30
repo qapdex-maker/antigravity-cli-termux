@@ -37,15 +37,12 @@ if [ -n "$CWD" ]; then
     if [[ "$TEMP_CWD" == *"/"* ]]; then
       TEMP_CWD="${TEMP_CWD#*/}"
       WORKSPACE="${TEMP_CWD%%/*}"
-    else
-      # Not enough components, fall back to basename
-      TEMP_CWD="${CWD%/}"
-      WORKSPACE="${TEMP_CWD##*/}"
-      WORKSPACE="${WORKSPACE:-/}"
     fi
-  else
-    # Extract base name using pure Bash parameter expansion to prevent process spawns and option injection.
-    # Performance Optimization (Bolt): This avoids fork/exec overhead of the external `basename` command.
+  fi
+  # Fallback to standard basename extraction if not a Google path or missing components.
+  # Performance Optimization (Bolt): Extract base name using pure Bash parameter expansion to prevent process spawns and option injection.
+  # This avoids the fork/exec overhead of the external `basename` command.
+  if [ -z "${WORKSPACE:-}" ]; then
     TEMP_CWD="${CWD%/}"
     WORKSPACE="${TEMP_CWD##*/}"
     WORKSPACE="${WORKSPACE:-/}"
