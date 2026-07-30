@@ -311,25 +311,16 @@ divider
 
 # ── Environment check ─────────────────────────────────────────────────────────
 [[ "$(uname -m)" == "aarch64" ]] || die "Architecture must be aarch64"
-command -v curl >/dev/null 2>&1  || die "curl is required. Please install it by running:
-
-  pkg install curl"
-command -v tar  >/dev/null 2>&1  || die "tar is required. Please install it by running:
-
-  pkg install tar"
-command -v install >/dev/null 2>&1 || die "install is required. Please install coreutils by running:
-
-  pkg install coreutils"
-command -v jq      >/dev/null 2>&1 || die "jq is required (used by statusline and other tools). Please install it by running:
-
-  pkg install jq"
+command -v curl >/dev/null 2>&1  || die "curl is required. Please install it using: pkg install curl"
+command -v tar  >/dev/null 2>&1  || die "tar is required. Please install it using: pkg install tar"
+command -v install >/dev/null 2>&1 || die "install is required. Please install it using: pkg install coreutils"
+command -v jq      >/dev/null 2>&1 || die "jq is required (used by statusline and other tools). Please install it using: pkg install jq"
 
 GLIBC_LOADER="${TERMUX_PREFIX}/glibc/lib/ld-linux-aarch64.so.1"
 if [[ ! -x "$GLIBC_LOADER" ]]; then
   die "Missing Termux glibc loader: $GLIBC_LOADER
-Please install glibc by running:
-
-  pkg install glibc-repo glibc"
+Please install the glibc packages using:
+  pkg install glibc-repo && pkg install glibc"
 fi
 
 check_lse() {
@@ -343,16 +334,14 @@ check_qemu() {
 CA_BUNDLE="${TERMUX_PREFIX}/etc/tls/cert.pem"
 if [[ ! -s "$CA_BUNDLE" ]]; then
   die "Missing Termux CA bundle: $CA_BUNDLE
-Please install ca-certificates by running:
-
+Please install the ca-certificates package using:
   pkg install ca-certificates"
 fi
 
 if ! check_lse; then
   if ! check_qemu; then
     die "This CPU does not support LSE atomics, and qemu-aarch64 was not found.
-Please install qemu by running:
-
+Please install the qemu-user-aarch64 package using:
   pkg install qemu-user-aarch64"
   fi
   ok "LSE Emulation: QEMU enabled"
