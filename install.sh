@@ -172,23 +172,23 @@ download_with_progress() {
     done <<< "$head_out"
   fi
 
-  # Strip leading zeros to prevent Bash octal arithmetic interpretation error (e.g. 08500000)
-  total_size="${total_size#${total_size%%[!0]*}}"
-  total_size="${total_size:-0}"
-
   if [[ -z "$total_size" || "$total_size" == *[!0-9]* ]]; then
     curl -fLs -H "Cache-Control: no-cache" -o "$dest" -- "$url" >/dev/null 2>&1 &
     spinner $! "Downloading payload..."
     return $?
   fi
 
+  # Strip leading zeros to prevent Bash octal arithmetic interpretation error (e.g. 08500000)
+  # Performance Optimization (Bolt): Use highly efficient base-10 arithmetic expansion $((10#0$VAR))
+  total_size=$((10#0$total_size))
+
   local cols
   cols=$(terminal_cols)
   [[ -z "$cols" || "$cols" == *[!0-9]* ]] && cols=60
 
   # Strip leading zeros to prevent Bash octal arithmetic interpretation error (e.g. 08, 09)
-  cols="${cols#${cols%%[!0]*}}"
-  cols="${cols:-60}"
+  # Performance Optimization (Bolt): Use highly efficient base-10 arithmetic expansion $((10#0$VAR))
+  cols=$((10#0$cols))
 
   local w=$(( cols - 38 ))
   (( w > 60 )) && w=60
@@ -228,8 +228,8 @@ download_with_progress() {
     [[ -z "$current_size" || "$current_size" == *[!0-9]* ]] && current_size=0
 
     # Strip leading zeros to prevent Bash octal arithmetic interpretation error (e.g. 08, 09)
-    current_size="${current_size#${current_size%%[!0]*}}"
-    current_size="${current_size:-0}"
+    # Performance Optimization (Bolt): Use highly efficient base-10 arithmetic expansion $((10#0$current_size))
+    current_size=$((10#0$current_size))
 
     local pct=$(( total_size > 0 ? current_size * 100 / total_size : 0 ))
     (( pct > 100 )) && pct=100
@@ -274,8 +274,8 @@ if { curl -fLs -H "Cache-Control: no-cache" -- "https://raw.githubusercontent.co
   [[ -z "$COLS" || "$COLS" == *[!0-9]* ]] && COLS=60
 
   # Strip leading zeros to prevent Bash octal arithmetic interpretation error (e.g. 08, 09)
-  COLS="${COLS#${COLS%%[!0]*}}"
-  COLS="${COLS:-60}"
+  # Performance Optimization (Bolt): Use highly efficient base-10 arithmetic expansion $((10#0$COLS))
+  COLS=$((10#0$COLS))
 
   awk -v cols="$COLS" -v arch="$(uname -m)" -v bold="${BOLD}${CYAN}" -v dim="${DIM}" -v grn="${GREEN}" -v rst="${RESET}" '
   {
@@ -316,15 +316,16 @@ divider
 
 # ── Environment check ─────────────────────────────────────────────────────────
 [[ "$(uname -m)" == "aarch64" ]] || die "Architecture must be aarch64"
-command -v curl >/dev/null 2>&1  || die "curl is required"
-command -v tar  >/dev/null 2>&1  || die "tar is required"
-command -v install >/dev/null 2>&1 || die "install is required"
-command -v jq      >/dev/null 2>&1 || die "jq is required (used by statusline and other tools)"
+command -v curl >/dev/null 2>&1  || die "curl is required. Please install it using: pkg install curl"
+command -v tar  >/dev/null 2>&1  || die "tar is required. Please install it using: pkg install tar"
+command -v install >/dev/null 2>&1 || die "install is required. Please install it using: pkg install coreutils"
+command -v jq      >/dev/null 2>&1 || die "jq is required (used by statusline and other tools). Please install it using: pkg install jq"
 
 GLIBC_LOADER="${TERMUX_PREFIX}/glibc/lib/ld-linux-aarch64.so.1"
 if [[ ! -x "$GLIBC_LOADER" ]]; then
   die "Missing Termux glibc loader: $GLIBC_LOADER
-You may need to install the glibc-repo and glibc packages, then rerun this installer."
+Please install the glibc packages using:
+  pkg install glibc-repo && pkg install glibc"
 fi
 
 check_lse() {
@@ -338,13 +339,15 @@ check_qemu() {
 CA_BUNDLE="${TERMUX_PREFIX}/etc/tls/cert.pem"
 if [[ ! -s "$CA_BUNDLE" ]]; then
   die "Missing Termux CA bundle: $CA_BUNDLE
-You may need to install the ca-certificates package, then rerun this installer."
+Please install the ca-certificates package using:
+  pkg install ca-certificates"
 fi
 
 if ! check_lse; then
   if ! check_qemu; then
     die "This CPU does not support LSE atomics, and qemu-aarch64 was not found.
-You may need to install the qemu-user-aarch64 package, then rerun this installer."
+Please install the qemu-user-aarch64 package using:
+  pkg install qemu-user-aarch64"
   fi
   ok "LSE Emulation: QEMU enabled"
 fi
@@ -352,7 +355,7 @@ fi
 ok "Environment: ${ENV_TYPE} (aarch64)"
 
 # ── Clean previous install ────────────────────────────────────────────────────
-mkdir -p "$INSTALL_BIN_DIR" "$(dirname "$TMP")" 2>/dev/null
+mkdir -p "$INSTALL_BIN_DIR" 2>/dev/null
 rm -rf "$EXTRACT_DIR"
 mkdir -p "$EXTRACT_DIR"
 
