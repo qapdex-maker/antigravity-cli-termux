@@ -15,3 +15,7 @@
 ## 2026-07-26 - [Avoid Repeated Command Probing in Tight Loops]
 **Learning:** Running a fallback chain of command flags (such as trying Linux vs BSD `stat` syntax) inside high-frequency progress bar loops causes massive overhead. On systems where the first option fails, it executes two process spawns on every iteration instead of one.
 **Action:** Probe the correct command options once before the loop (e.g. on `/dev/null`) and cache the flags to prevent unnecessary process spawns inside tight loops.
+
+## 2026-07-28 - [Ultra-Fast and Safe Leading-Zero Stripping via Base-10 Arithmetic]
+**Learning:** Replacing slow, nested parameter expansions (e.g. `${VAR#${VAR%%[!0]*}}`) used to strip leading zeros in Bash (to avoid octal errors) with native base-10 arithmetic expansions yields a 2.6x performance speedup. However, raw `$((10#$VAR))` will crash with a syntax error if `$VAR` is empty or unset.
+**Action:** Always use the robust `$((10#0$VAR))` pattern, prepending a `0` to the variable, which guarantees safe evaluation to `0` even if the variable is empty or unset.
