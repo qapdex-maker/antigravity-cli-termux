@@ -46,20 +46,24 @@ fi
 ENV_TYPE="termux"
 TERMUX_PREFIX="$PREFIX"
 INSTALL_BIN_DIR="${TERMUX_PREFIX}/bin"
-TMP="${TERMUX_PREFIX}/tmp/antigravity-termux-standalone.tar.gz"
-EXTRACT_DIR="${TERMUX_PREFIX}/tmp/.antigravity-extract"
+
+# Security Enhancement (Sentinel): Create a secure randomized temporary directory (CWE-377, CWE-59)
+# with restricted 0700 permissions to mitigate local race conditions, symlink attacks, and predictable tmp files.
+SECURE_TMP_DIR=$(mktemp -d "${TERMUX_PREFIX}/tmp/antigravity-install.XXXXXX" 2>/dev/null || mktemp -d)
+chmod 0700 "$SECURE_TMP_DIR"
+
+TMP="${SECURE_TMP_DIR}/antigravity-termux-standalone.tar.gz"
+EXTRACT_DIR="${SECURE_TMP_DIR}/.antigravity-extract"
 INSTALL_SUCCESS=0
 
 # Ensure base directories exist for fresh setups
-mkdir -p "$(dirname "$TMP")" 2>/dev/null || true
+mkdir -p "$SECURE_TMP_DIR" 2>/dev/null || true
 
 # ── Cleanup Hook ──────────────────────────────────────────────────────────────
 cleanup() {
   printf "\033[?25h" # Restore cursor if cancelled
-  [[ -n "${TMP_LOGO:-}" && -f "$TMP_LOGO" ]] && rm -f "$TMP_LOGO"
-  [[ -d "$EXTRACT_DIR" ]] && rm -rf "$EXTRACT_DIR"
+  [[ -d "$SECURE_TMP_DIR" ]] && rm -rf "$SECURE_TMP_DIR"
   if [[ "${INSTALL_SUCCESS:-0}" -ne 1 ]]; then
-    [[ -f "$TMP" ]] && rm -f "$TMP"
     if [[ -n "${ANTIGRAVITY_BAK:-}" && -f "$ANTIGRAVITY_BAK" ]]; then
       mv -f "$ANTIGRAVITY_BAK" "$INSTALL_BIN_DIR/antigravity" || true
     fi
@@ -261,7 +265,8 @@ download_with_progress() {
 
 # ── Header ────────────────────────────────────────────────────────────────────
 echo ""
-TMP_LOGO=$(mktemp 2>/dev/null || echo "${HOME}/.local/.antigravity-logo.ans")
+# Security Enhancement (Sentinel): Keep all temporary files within the secure randomized temporary directory
+TMP_LOGO=$(mktemp "${SECURE_TMP_DIR}/antigravity-logo.XXXXXX" 2>/dev/null || echo "${SECURE_TMP_DIR}/antigravity-logo.ans")
 
 if { curl -fLs -H "Cache-Control: no-cache" -- "https://raw.githubusercontent.com/${REPO}/dev/logo.ans" > "$TMP_LOGO" 2>/dev/null || curl -fLs -H "Cache-Control: no-cache" -- "https://raw.githubusercontent.com/Brajesh2022/antigravity-cli-termux/dev/logo.ans" > "$TMP_LOGO" 2>/dev/null; } && [[ -s "$TMP_LOGO" ]]; then
 
