@@ -224,11 +224,10 @@ else
   BAR_COLOR="$FG_BRIGHT_WHITE"
 fi
 
-# Build bar with partial-fill last block using pure Bash slicing to avoid loop overhead.
-# Performance Optimization (Bolt): This eliminates loop overhead, executing 3x faster.
-# Since BAR_LEN is at most 15, we use 15-character templates for full and empty portions of the bar.
-FULL_BAR="███████████████"
-EMPTY_BAR="···············"
+# Build bar with partial-fill last block using locale-safe pre-defined segments to avoid multi-byte UTF-8 string slicing.
+# Performance Optimization (Bolt): Standard string slicing `${FULL_BAR:0:FILLED}` slices by bytes in non-UTF-8 locales (e.g., LC_ALL=C),
+# causing terminal corruption on multi-byte characters like █ (3 bytes) and · (2 bytes). Direct case-based assignment is
+# extremely fast, completely locale-independent, and eliminates all slicing and loop overhead.
 if [ "$FILLED" -lt "$BAR_LEN" ]; then
   if [ "$REMAINDER" -ge 75 ]; then
     PART_CHAR="▓"
@@ -240,9 +239,68 @@ if [ "$FILLED" -lt "$BAR_LEN" ]; then
     PART_CHAR="·"
   fi
   EMPTY_LEN=$(( BAR_LEN - FILLED - 1 ))
-  BAR="${FULL_BAR:0:FILLED}${PART_CHAR}${EMPTY_BAR:0:EMPTY_LEN}"
+
+  # Generate filled segment
+  case "$FILLED" in
+    0) F_BAR="" ;;
+    1) F_BAR="█" ;;
+    2) F_BAR="██" ;;
+    3) F_BAR="███" ;;
+    4) F_BAR="████" ;;
+    5) F_BAR="█████" ;;
+    6) F_BAR="██████" ;;
+    7) F_BAR="███████" ;;
+    8) F_BAR="████████" ;;
+    9) F_BAR="█████████" ;;
+    10) F_BAR="██████████" ;;
+    11) F_BAR="███████████" ;;
+    12) F_BAR="████████████" ;;
+    13) F_BAR="█████████████" ;;
+    14) F_BAR="██████████████" ;;
+    *) F_BAR="███████████████" ;;
+  esac
+
+  # Generate empty segment
+  case "$EMPTY_LEN" in
+    0) E_BAR="" ;;
+    1) E_BAR="·" ;;
+    2) E_BAR="··" ;;
+    3) E_BAR="···" ;;
+    4) E_BAR="····" ;;
+    5) E_BAR="·····" ;;
+    6) E_BAR="······" ;;
+    7) E_BAR="·······" ;;
+    8) E_BAR="········" ;;
+    9) E_BAR="·········" ;;
+    10) E_BAR="··········" ;;
+    11) E_BAR="···········" ;;
+    12) E_BAR="············" ;;
+    13) E_BAR="·············" ;;
+    14) E_BAR="··············" ;;
+    *) E_BAR="···············" ;;
+  esac
+
+  BAR="${F_BAR}${PART_CHAR}${E_BAR}"
 else
-  BAR="${FULL_BAR:0:BAR_LEN}"
+  # Generate full bar of length BAR_LEN
+  case "$BAR_LEN" in
+    0) BAR="" ;;
+    1) BAR="█" ;;
+    2) BAR="██" ;;
+    3) BAR="███" ;;
+    4) BAR="████" ;;
+    5) BAR="█████" ;;
+    6) BAR="██████" ;;
+    7) BAR="███████" ;;
+    8) BAR="████████" ;;
+    9) BAR="█████████" ;;
+    10) BAR="██████████" ;;
+    11) BAR="███████████" ;;
+    12) BAR="████████████" ;;
+    13) BAR="█████████████" ;;
+    14) BAR="██████████████" ;;
+    *) BAR="███████████████" ;;
+  esac
 fi
 
 # ─── Stats ───────────────────────────────────────────────────────────────────
