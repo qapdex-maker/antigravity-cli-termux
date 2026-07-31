@@ -2,6 +2,14 @@
 # Antigravity CLI - Termux Native (Setup)
 set -Eeuo pipefail
 
+# Security Enhancement (Sentinel): Initialize critical variables to prevent environment hijacking
+# and arbitrary file deletion/move vulnerabilities (CWE-377, CWE-59, CWE-459).
+ANTIGRAVITY_BAK=""
+ANTIGRAVITY_VA39_BAK=""
+INSTALL_BIN_DIR=""
+SECURE_TMP_DIR=""
+INSTALL_SUCCESS=0
+
 REPO="${ANTIGRAVITY_REPO:-wallentx/antigravity-cli-termux}"
 if [[ "$REPO" == -* || "$REPO" == *[!a-zA-Z0-9_./-]* ]]; then
   printf "[ERR] Invalid ANTIGRAVITY_REPO: contains unsafe characters or starts with a dash\n" >&2
@@ -62,12 +70,12 @@ mkdir -p "$SECURE_TMP_DIR" 2>/dev/null || true
 # ── Cleanup Hook ──────────────────────────────────────────────────────────────
 cleanup() {
   printf "\033[?25h" # Restore cursor if cancelled
-  [[ -d "$SECURE_TMP_DIR" ]] && rm -rf "$SECURE_TMP_DIR"
+  [[ -n "${SECURE_TMP_DIR:-}" && -d "$SECURE_TMP_DIR" ]] && rm -rf "$SECURE_TMP_DIR"
   if [[ "${INSTALL_SUCCESS:-0}" -ne 1 ]]; then
-    if [[ -n "${ANTIGRAVITY_BAK:-}" && -f "$ANTIGRAVITY_BAK" ]]; then
+    if [[ -n "${INSTALL_BIN_DIR:-}" && -n "${ANTIGRAVITY_BAK:-}" && -f "$ANTIGRAVITY_BAK" ]]; then
       mv -f "$ANTIGRAVITY_BAK" "$INSTALL_BIN_DIR/antigravity" || true
     fi
-    if [[ -n "${ANTIGRAVITY_VA39_BAK:-}" && -f "$ANTIGRAVITY_VA39_BAK" ]]; then
+    if [[ -n "${INSTALL_BIN_DIR:-}" && -n "${ANTIGRAVITY_VA39_BAK:-}" && -f "$ANTIGRAVITY_VA39_BAK" ]]; then
       mv -f "$ANTIGRAVITY_VA39_BAK" "$INSTALL_BIN_DIR/antigravity.va39" || true
     fi
   else

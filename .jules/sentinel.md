@@ -39,3 +39,8 @@
 **Vulnerability:** Use of predictable, hardcoded temporary file paths and extraction directories in a shared `/tmp` directory.
 **Learning:** Using hardcoded paths for temporary files or directories (such as `TMP` and `EXTRACT_DIR` inside `/tmp` or `${PREFIX}/tmp`) makes the script vulnerable to symlink attacks, arbitrary file overwriting, and race conditions (CWE-377, CWE-59) by other local users on a shared system.
 **Prevention:** Always use `mktemp -d` to securely create a unique temporary directory with restricted `0700` permissions (readable/writable only by the owner), and place all temporary files and extraction directories within it.
+
+## 2026-07-31 - Environment Variable Hijacking and Arbitrary File Destruction via Trap Cleanup Logic
+**Vulnerability:** Uninitialized critical variables in shell scripts (e.g., `ANTIGRAVITY_BAK`, `INSTALL_BIN_DIR`) can be hijacked from the parent environment, allowing users/attackers to manipulate execution flows. When coupled with script-level cleanup traps (like moving or deleting backup files on exit/cancel), uninitialized environment variables can lead to arbitrary file move or deletion operations (CWE-377, CWE-59, CWE-459).
+**Learning:** Trap handlers in shell scripts run on any exit or cancellation. If the script fails or exits before variables are initialized inside the script body, pre-existing environment variables of the same name can control file operations inside the trap handler.
+**Prevention:** Always explicitly initialize critical shell variables controlling backup paths, installation folders, or temporary locations at the very beginning of the script body. Additionally, validate that target variables are non-empty before executing state-altering commands like `mv` or `rm`.
