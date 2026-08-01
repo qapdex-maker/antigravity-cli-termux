@@ -271,6 +271,12 @@ download_with_progress() {
   return $exit_status
 }
 
+# ── Early Dependency Check ────────────────────────────────────────────────────
+# Validate critical command-line dependencies curl and awk before the header/logo block
+# to prevent ugly shell/command-not-found errors during setup.
+command -v curl >/dev/null 2>&1 || die "curl is required to download assets. Please install it using: pkg install curl"
+command -v awk >/dev/null 2>&1  || die "awk is required to render the logo. Please install it using: pkg install gawk"
+
 # ── Header ────────────────────────────────────────────────────────────────────
 echo ""
 # Security Enhancement (Sentinel): Keep all temporary files within the secure randomized temporary directory
@@ -325,6 +331,7 @@ divider
 # ── Environment check ─────────────────────────────────────────────────────────
 [[ "$(uname -m)" == "aarch64" ]] || die "Architecture must be aarch64"
 command -v curl >/dev/null 2>&1  || die "curl is required. Please install it using: pkg install curl"
+command -v awk  >/dev/null 2>&1  || die "awk is required. Please install it using: pkg install gawk"
 command -v tar  >/dev/null 2>&1  || die "tar is required. Please install it using: pkg install tar"
 command -v install >/dev/null 2>&1 || die "install is required. Please install it using: pkg install coreutils"
 command -v jq      >/dev/null 2>&1 || die "jq is required (used by statusline and other tools). Please install it using: pkg install jq"
