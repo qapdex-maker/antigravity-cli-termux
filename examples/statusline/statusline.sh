@@ -2,29 +2,29 @@
 set -euo pipefail
 
 # ─── ANSI Helpers (Standard 16-color palette only) ───────────────────────────
-R="\033[0m"         # Reset
-B="\033[1m"         # Bold
-D="\033[2m"         # Dim
-I="\033[3m"         # Italic
+R=$'\033[0m'         # Reset
+B=$'\033[1m'         # Bold
+D=$'\033[2m'         # Dim
+I=$'\033[3m'         # Italic
 
 # Foreground accents (Standard 16 colors)
-FG_BLACK="\033[30m"
-FG_RED="\033[31m"
-FG_GREEN="\033[32m"
-FG_YELLOW="\033[33m"
-FG_BLUE="\033[34m"
-FG_MAGENTA="\033[35m"
-FG_CYAN="\033[36m"
-FG_WHITE="\033[37m"
+FG_BLACK=$'\033[30m'
+FG_RED=$'\033[31m'
+FG_GREEN=$'\033[32m'
+FG_YELLOW=$'\033[33m'
+FG_BLUE=$'\033[34m'
+FG_MAGENTA=$'\033[35m'
+FG_CYAN=$'\033[36m'
+FG_WHITE=$'\033[37m'
 
-FG_GRAY="\033[90m"
-FG_BRIGHT_RED="\033[91m"
-FG_BRIGHT_GREEN="\033[92m"
-FG_BRIGHT_YELLOW="\033[93m"
-FG_BRIGHT_BLUE="\033[94m"
-FG_BRIGHT_MAGENTA="\033[95m"
-FG_BRIGHT_CYAN="\033[96m"
-FG_BRIGHT_WHITE="\033[97m"
+FG_GRAY=$'\033[90m'
+FG_BRIGHT_RED=$'\033[91m'
+FG_BRIGHT_GREEN=$'\033[92m'
+FG_BRIGHT_YELLOW=$'\033[93m'
+FG_BRIGHT_BLUE=$'\033[94m'
+FG_BRIGHT_MAGENTA=$'\033[95m'
+FG_BRIGHT_CYAN=$'\033[96m'
+FG_BRIGHT_WHITE=$'\033[97m'
 
 # Number Highlight Color
 NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
@@ -336,15 +336,15 @@ LINE2=" ${CTX}${DOT}${ART_FMT}${DOT}${SUB_FMT}${DOT}${BG_FMT}${DOT}${SB}"
 
 if [ "$COLS" -ge 120 ]; then
   # Wide: single line
-  printf "%b\n" "${LINE1}${FG_GRAY}  │  ${R}${LINE2}"
+  printf "%s\n" "${LINE1}${FG_GRAY}  │  ${R}${LINE2}"
 elif [ "$COLS" -ge 80 ]; then
   # Medium: two-line layout with border
-  printf "%b\n" "${FG_GRAY}╭─${R} ${LINE1}"
-  printf "%b\n" "${FG_GRAY}╰─${R}${LINE2}"
+  printf "%s\n" "${FG_GRAY}╭─${R} ${LINE1}"
+  printf "%s\n" "${FG_GRAY}╰─${R}${LINE2}"
 else
   # Narrow: compact two-line, minimal chrome
   # Include critical info (State, Model, Branch, Context, Sandbox)
-  printf "%b\n" "${S}${M}${V}"
+  printf "%s\n" "${S}${M}${V}"
   # Dynamically render only active stats (> 0) to avoid screen clutter on narrow Termux displays
   STATS_LIST=""
   if [ "$ARTIFACTS" -gt 0 ]; then
@@ -366,8 +366,8 @@ else
   fi
 
   if [ -n "$STATS_LIST" ]; then
-    printf "%b\n" "${CTX}${DOT}${STATS_LIST}${DOT}${SB}"
+    printf "%s\n" "${CTX}${DOT}${STATS_LIST}${DOT}${SB}"
   else
-    printf "%b\n" "${CTX}${DOT}${SB}"
+    printf "%s\n" "${CTX}${DOT}${SB}"
   fi
 fi

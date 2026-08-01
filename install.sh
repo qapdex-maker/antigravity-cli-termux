@@ -98,33 +98,33 @@ trap handle_cancel INT TERM
 
 # ── Colors ────────────────────────────────────────────────────────────────────
 if [[ -t 1 ]]; then
-  BOLD="\033[1m"
-  DIM="\033[2m"
-  GREEN="\033[32m"
-  RED="\033[31m"
-  CYAN="\033[36m"
-  RESET="\033[0m"
+  BOLD=$'\033[1m'
+  DIM=$'\033[2m'
+  GREEN=$'\033[32m'
+  RED=$'\033[31m'
+  CYAN=$'\033[36m'
+  RESET=$'\033[0m'
 else
   BOLD="" DIM="" GREEN="" RED="" CYAN="" RESET=""
 fi
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
-info()    { printf '%b\n' " ℹ️  ${CYAN}[..]${RESET} ${DIM}$*${RESET}"; }
-ok()      { printf '%b\n' " ✅ ${GREEN}[OK]${RESET} $*"; }
+info()    { printf '%s\n' " ℹ️  ${CYAN}[..]${RESET} ${DIM}$*${RESET}"; }
+ok()      { printf '%s\n' " ✅ ${GREEN}[OK]${RESET} $*"; }
 die() {
   {
     printf "\033[?25h" # Restore cursor
     if [[ $# -gt 0 ]]; then
-      printf '\n%b\n' " ❌ ${RED}[ERR]${RESET} $*"
+      printf '\n%s\n' " ❌ ${RED}[ERR]${RESET} $*"
     else
-      printf '\n%b\n' " ❌ ${RED}[ERR]${RESET} Installation failed or was cancelled."
+      printf '\n%s\n' " ❌ ${RED}[ERR]${RESET} Installation failed or was cancelled."
     fi
     printf "For manual patching and installation:\n"
-    printf "%bhttps://gist.github.com/Brajesh2022/e42160d29b55417db6c18c52dd1d6d37%b\n\n" "$CYAN" "$RESET"
+    printf "%shttps://gist.github.com/Brajesh2022/e42160d29b55417db6c18c52dd1d6d37%s\n\n" "$CYAN" "$RESET"
   } >&2
   exit 1
 }
-divider() { printf '%b\n' "${DIM}────────────────────────────────────────${RESET}"; }
+divider() { printf '%s\n' "${DIM}────────────────────────────────────────${RESET}"; }
 
 terminal_cols() {
   if [[ -r /dev/tty ]]; then
@@ -141,16 +141,16 @@ spinner() {
   printf "\033[?25l" # Hide cursor
   while kill -0 "$pid" 2>/dev/null; do
     local temp=${spinstr#?}
-    printf "\r\033[K %b[%c]%b %b%s%b" "$CYAN" "$spinstr" "$RESET" "$DIM" "$msg" "$RESET"
+    printf "\r\033[K %s[%c]%s %s%s%s" "$CYAN" "$spinstr" "$RESET" "$DIM" "$msg" "$RESET"
     local spinstr=$temp${spinstr%"$temp"}
     sleep 0.1
   done
   local exit_status=0
   wait "$pid" || exit_status=$?
   if [ $exit_status -eq 0 ]; then
-    printf "\r\033[K ✅ %b[OK]%b %s\n" "$GREEN" "$RESET" "$msg"
+    printf "\r\033[K ✅ %s[OK]%s %s\n" "$GREEN" "$RESET" "$msg"
   else
-    printf "\r\033[K ❌ %b[ERR]%b %s\n" "$RED" "$RESET" "$msg"
+    printf "\r\033[K ❌ %s[ERR]%s %s\n" "$RED" "$RESET" "$msg"
   fi
   printf "\033[?25h" # Show cursor
   return $exit_status
@@ -248,7 +248,7 @@ download_with_progress() {
     local c_mb_d=$(( (current_size * 10 / 1048576) % 10 ))
 
     # Optimized rendering using pure Bash (removes awk overhead)
-    printf "\r\033[K %b[..]%b [%s] %3d%% %b%5d.%dM / %4d.%dM%b" \
+    printf "\r\033[K %s[..]%s [%s] %3d%% %s%5d.%dM / %4d.%dM%s" \
       "$CYAN" "$RESET" "$bar" "$pct" "$DIM" "$c_mb_i" "$c_mb_d" "$t_mb_i" "$t_mb_d" "$RESET"
 
     sleep 0.15
@@ -261,10 +261,10 @@ download_with_progress() {
     local bar="${full_bar:0:w}"
     local t_mb_i=$(( total_size / 1048576 ))
     local t_mb_d=$(( (total_size * 10 / 1048576) % 10 ))
-    printf "\r\033[K ✅ %b[OK]%b [%s] 100%% %b%5d.%dM / %4d.%dM%b\n" \
+    printf "\r\033[K ✅ %s[OK]%s [%s] 100%% %s%5d.%dM / %4d.%dM%s\n" \
       "$GREEN" "$RESET" "$bar" "$DIM" "$t_mb_i" "$t_mb_d" "$t_mb_i" "$t_mb_d" "$RESET"
   else
-    printf "\r\033[K ❌ %b[ERR]%b Download failed.\n" "$RED" "$RESET"
+    printf "\r\033[K ❌ %s[ERR]%s Download failed.\n" "$RED" "$RESET"
   fi
 
   printf "\033[?25h" # Restore cursor
@@ -316,8 +316,8 @@ if { curl -fLs -H "Cache-Control: no-cache" -- "https://raw.githubusercontent.co
 
   rm -f "$TMP_LOGO"
 else
-  printf "  %bAntigravity Termux%b\n" "${BOLD}${CYAN}" "${RESET}"
-  printf "  %bStandalone Installer%b\n" "${DIM}" "${RESET}"
+  printf "  %sAntigravity Termux%s\n" "${BOLD}${CYAN}" "${RESET}"
+  printf "  %sStandalone Installer%s\n" "${DIM}" "${RESET}"
 fi
 echo ""
 divider
@@ -409,7 +409,7 @@ else
 fi
 
 # ── Done ──────────────────────────────────────────────────────────────────────
-printf '\n%b\n' "${GREEN}${BOLD}✨ Installation Complete! 🚀${RESET}"
+printf '\n%s\n' "${GREEN}${BOLD}✨ Installation Complete! 🚀${RESET}"
 divider
 info "Installed binaries to: ${BOLD}${INSTALL_BIN_DIR}${RESET}"
 info "Release archive kept at: ${BOLD}${TMP}${RESET}"
