@@ -37,3 +37,7 @@
 ## 2026-07-29 - Actionable Installer Guidance on Missing Dependencies
 **Learning:** Augmenting missing dependency or environmental checks in installer terminal scripts with exact, copy-pasteable command resolutions (e.g. `pkg install jq` or `pkg install ca-certificates` on Termux) replaces ambiguous errors with actionable, self-documenting guidance to greatly reduce setup friction.
 **Action:** When a prerequisite or binary check fails in a CLI setup script, always append the exact commands required to install or set up that dependency to minimize user cognitive overhead.
+
+## 2026-08-01 - Proactive Early Error Handling in Interactive CLI Setup Scripts
+**Learning:** Moving critical dependency checks (like `curl` and `awk`) to the very beginning of installation scripts—prior to executing any decorative headers, ASCII logo downloads, or progress updates—avoids raw, confusing shell parser crashes and ensures users get an accessible, clear, and styled error message detailing how to resolve the system requirement before any script-internal logic executes.
+**Action:** Always validate the existence of all tools used in rendering terminal headers or download sequences at the absolute entry-point of installer files.
