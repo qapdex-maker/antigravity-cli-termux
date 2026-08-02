@@ -58,6 +58,10 @@ INSTALL_BIN_DIR="${TERMUX_PREFIX}/bin"
 # Security Enhancement (Sentinel): Create a secure randomized temporary directory (CWE-377, CWE-59)
 # with restricted 0700 permissions to mitigate local race conditions, symlink attacks, and predictable tmp files.
 SECURE_TMP_DIR=$(mktemp -d "${TERMUX_PREFIX}/tmp/antigravity-install.XXXXXX" 2>/dev/null || mktemp -d)
+if [[ -z "${SECURE_TMP_DIR:-}" || ! -d "$SECURE_TMP_DIR" ]]; then
+  printf "[ERR] Failed to create secure temporary directory\n" >&2
+  exit 1
+fi
 chmod 0700 "$SECURE_TMP_DIR"
 
 TMP="${SECURE_TMP_DIR}/antigravity-termux-standalone.tar.gz"
