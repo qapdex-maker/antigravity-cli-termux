@@ -10,11 +10,15 @@ set -euo pipefail
   read -d '' -r STATE || true
   read -d '' -r CWD || true
   read -d '' -r SANDBOX || true
+  read -d '' -r VCS_BRANCH || true
+  read -d '' -r VCS_DIRTY || true
   read -d '' -r _ || true
 } < <(jq -j '
   (.agent_state // "idle"), "\u0000",
   (.workspace.current_dir // ""), "\u0000",
   (.sandbox.enabled // false), "\u0000",
+  (.vcs?.branch // ""), "\u0000",
+  (.vcs?.dirty // false), "\u0000",
   "END\u0000"
 ' 2>/dev/null)
 
@@ -23,11 +27,15 @@ set -euo pipefail
 STATE="${STATE//$'\r'/}"
 CWD="${CWD//$'\r'/}"
 SANDBOX="${SANDBOX//$'\r'/}"
+VCS_BRANCH="${VCS_BRANCH//$'\r'/}"
+VCS_DIRTY="${VCS_DIRTY//$'\r'/}"
 
 # Fallback in case of empty input or parsing error
 [[ -z "$STATE" ]] && STATE="idle"
 [[ -z "$CWD" ]] && CWD=""
 [[ -z "$SANDBOX" ]] && SANDBOX="false"
+[[ -z "$VCS_BRANCH" ]] && VCS_BRANCH=""
+[[ -z "$VCS_DIRTY" ]] && VCS_DIRTY="false"
 
 # Try to extract CitC workspace name from CWD
 # Performance Optimization (Bolt): Avoid regex `=~` engine compilation and execution overhead by using pure Bash parameter expansion.
@@ -56,6 +64,8 @@ fi
 [[ "$STATE"      == *[!a-zA-Z0-9_-]* || -z "$STATE" ]] && STATE="idle"
 [[ "$WORKSPACE"  == *[!a-zA-Z0-9_./\ -]* || -z "$WORKSPACE" ]] && WORKSPACE="unknown"
 [[ "$SANDBOX"    != "true" && "$SANDBOX" != "false" ]] && SANDBOX="false"
+[[ "$VCS_BRANCH" == *[!a-zA-Z0-9_./-]* ]] && VCS_BRANCH=""
+[[ "$VCS_DIRTY"  != "true" && "$VCS_DIRTY" != "false" ]] && VCS_DIRTY="false"
 
 # Map state to emoji and polished label
 case "$STATE" in
@@ -89,14 +99,23 @@ case "$STATE" in
                 ;;
 esac
 
-# Build multi-dimensional safety visual cue since color is not supported in typical window titles
+# Build multi-dimensional branch text badge and safety visual cue since color is not supported in typical window titles
+VCS_TXT=""
+if [ -n "$VCS_BRANCH" ]; then
+  if [ "$VCS_DIRTY" = "true" ]; then
+    VCS_TXT=" (🌿 $VCS_BRANCH*)"
+  else
+    VCS_TXT=" (🌿 $VCS_BRANCH)"
+  fi
+fi
+
 if [ "$SANDBOX" = "true" ]; then
   SB_TXT=" (🔒 Sandbox ON)"
 else
   SB_TXT=" (🔓 Sandbox OFF)"
 fi
 
-TITLE="$EMOJI $LABEL | $WORKSPACE$SB_TXT"
+TITLE="$EMOJI $LABEL | $WORKSPACE$VCS_TXT$SB_TXT"
 
 # Print title safely to avoid option injection
 printf "%s\n" "$TITLE"

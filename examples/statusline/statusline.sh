@@ -49,8 +49,8 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
 } < <(jq -j '
   (.agent_state // "idle"), "\u0000",
   (.context_window.used_percentage // 0), "\u0000",
-  (.vcs.branch // ""), "\u0000",
-  (.vcs.dirty // false), "\u0000",
+  (.vcs?.branch // ""), "\u0000",
+  (.vcs?.dirty // false), "\u0000",
   (.sandbox.enabled // false), "\u0000",
   (.artifact_count // 0), "\u0000",
   (if .subagents | type == "array" then (.subagents | length) else 0 end), "\u0000",
