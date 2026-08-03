@@ -229,15 +229,6 @@ fi
 # causing terminal corruption on multi-byte characters like █ (3 bytes) and · (2 bytes). Direct case-based assignment is
 # extremely fast, completely locale-independent, and eliminates all slicing and loop overhead.
 if [ "$FILLED" -lt "$BAR_LEN" ]; then
-  if [ "$REMAINDER" -ge 75 ]; then
-    PART_CHAR="▓"
-  elif [ "$REMAINDER" -ge 50 ]; then
-    PART_CHAR="▒"
-  elif [ "$REMAINDER" -ge 25 ]; then
-    PART_CHAR="░"
-  else
-    PART_CHAR="·"
-  fi
   EMPTY_LEN=$(( BAR_LEN - FILLED - 1 ))
 
   # Generate filled segment
@@ -280,7 +271,22 @@ if [ "$FILLED" -lt "$BAR_LEN" ]; then
     *) E_BAR="···············" ;;
   esac
 
-  BAR="${F_BAR}${PART_CHAR}${E_BAR}"
+  # Contrast-enhanced progress bar coloring:
+  # The filled portion and partially filled character are colored with BAR_COLOR.
+  # The inactive/empty dots of the progress bar are colored with FG_GRAY.
+  if [ "$REMAINDER" -ge 75 ]; then
+    PART_CHAR="▓"
+    BAR="${BAR_COLOR}${F_BAR}${PART_CHAR}${FG_GRAY}${E_BAR}"
+  elif [ "$REMAINDER" -ge 50 ]; then
+    PART_CHAR="▒"
+    BAR="${BAR_COLOR}${F_BAR}${PART_CHAR}${FG_GRAY}${E_BAR}"
+  elif [ "$REMAINDER" -ge 25 ]; then
+    PART_CHAR="░"
+    BAR="${BAR_COLOR}${F_BAR}${PART_CHAR}${FG_GRAY}${E_BAR}"
+  else
+    PART_CHAR="·"
+    BAR="${BAR_COLOR}${F_BAR}${FG_GRAY}${PART_CHAR}${E_BAR}"
+  fi
 else
   # Generate full bar of length BAR_LEN
   case "$BAR_LEN" in
@@ -301,6 +307,7 @@ else
     14) BAR="██████████████" ;;
     *) BAR="███████████████" ;;
   esac
+  BAR="${BAR_COLOR}${BAR}"
 fi
 
 # ─── Stats ───────────────────────────────────────────────────────────────────
@@ -310,7 +317,7 @@ CTX_WARNING=""
 if [ "$PCT_INT" -ge 90 ]; then
   CTX_WARNING=" ⚠️"
 fi
-CTX="${FG_GRAY}📊 ctx ${BAR_COLOR}${BAR} ${CTX_PCT_COLOR}${PCT_FMT}%${CTX_WARNING}${R}"
+CTX="${FG_GRAY}📊 ctx ${BAR}${R} ${CTX_PCT_COLOR}${PCT_FMT}%${CTX_WARNING}${R}"
 
 # Dim zeros for better visual hierarchy without spawning subshells
 ART_COLOR="$FG_GRAY"; [ "$ARTIFACTS" -gt 0 ] && ART_COLOR="$NUM_COLOR"

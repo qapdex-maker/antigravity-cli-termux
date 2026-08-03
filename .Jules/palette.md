@@ -45,3 +45,7 @@
 ## 2026-08-02 - Multi-Dimensional VCS Branch Indicators in CLI Window Titles
 **Learning:** Appending the active development branch (e.g. `(🌿 main)` or `(🌿 main*)` when dirty) in terminal window/tab titles provides immediate, low-friction state confirmation directly on the user's desktop/taskbar workspace without cluttering CLI prompt lines. To prevent parsing failures in environments without a VCS, optional JSON keys must be parsed using `jq` safe navigation `?.`.
 **Action:** When incorporating nested, optional VCS properties into terminal output pipelines, always safe-navigate keys using `?.` and render status changes cleanly with recognizable badges.
+
+## 2026-08-03 - Contrast-Enhanced Terminal Progress Bars
+**Learning:** In terminal progress bars (such as context-window usage trackers), coloring both the filled and unfilled portions with a single accent color diminishes the visual boundary between active usage and remaining capacity. Applying a dimmed, inactive color (like `FG_GRAY`) specifically to the empty dots of the progress bar, while reserving the bright warning/accent color for the filled segment, dramatically enhances contrast and visual scanning.
+**Action:** Always color empty progress bar components with a low-contrast neutral/gray hue while utilizing high-contrast/bold semantic colors solely for active/filled metrics.
