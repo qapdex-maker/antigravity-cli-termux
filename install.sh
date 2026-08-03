@@ -167,7 +167,7 @@ download_with_progress() {
   printf "\033[?25l" # Hide cursor
 
   local total_size=""
-  if head_out=$(curl -sLI -H "Cache-Control: no-cache" -- "$url" 2>/dev/null); then
+  if head_out=$(curl -sLI --connect-timeout 5 -m 10 -H "Cache-Control: no-cache" -- "$url" 2>/dev/null); then
     # Performance Optimization (Bolt): Pure Bash loop over $head_out prevents slow external process spawning (awk and tail).
     # Runs ~70x faster, avoiding CPU and memory overhead on mobile/Termux systems.
     # Security Enhancement (Sentinel): Uses '--' to terminate curl options and prevent option injection.
@@ -185,7 +185,7 @@ download_with_progress() {
   fi
 
   if [[ -z "$total_size" || "$total_size" == *[!0-9]* ]]; then
-    curl -fLs -H "Cache-Control: no-cache" -o "$dest" -- "$url" >/dev/null 2>&1 &
+    curl -fLs --connect-timeout 15 -m 120 -H "Cache-Control: no-cache" -o "$dest" -- "$url" >/dev/null 2>&1 &
     spinner $! "Downloading payload..."
     return $?
   fi
@@ -214,7 +214,7 @@ download_with_progress() {
     stat_format="-L -f %z"
   fi
 
-  curl -fLs -H "Cache-Control: no-cache" -o "$dest" -- "$url" >/dev/null 2>&1 &
+  curl -fLs --connect-timeout 15 -m 120 -H "Cache-Control: no-cache" -o "$dest" -- "$url" >/dev/null 2>&1 &
   local pid=$!
 
   local full_bar="████████████████████████████████████████████████████████████"
@@ -286,7 +286,7 @@ echo ""
 # Security Enhancement (Sentinel): Keep all temporary files within the secure randomized temporary directory
 TMP_LOGO=$(mktemp "${SECURE_TMP_DIR}/antigravity-logo.XXXXXX" 2>/dev/null || echo "${SECURE_TMP_DIR}/antigravity-logo.ans")
 
-if { curl -fLs -H "Cache-Control: no-cache" -- "https://raw.githubusercontent.com/${REPO}/dev/logo.ans" > "$TMP_LOGO" 2>/dev/null || curl -fLs -H "Cache-Control: no-cache" -- "https://raw.githubusercontent.com/Brajesh2022/antigravity-cli-termux/dev/logo.ans" > "$TMP_LOGO" 2>/dev/null; } && [[ -s "$TMP_LOGO" ]]; then
+if { curl -fLs --connect-timeout 5 -m 10 -H "Cache-Control: no-cache" -- "https://raw.githubusercontent.com/${REPO}/dev/logo.ans" > "$TMP_LOGO" 2>/dev/null || curl -fLs --connect-timeout 5 -m 10 -H "Cache-Control: no-cache" -- "https://raw.githubusercontent.com/Brajesh2022/antigravity-cli-termux/dev/logo.ans" > "$TMP_LOGO" 2>/dev/null; } && [[ -s "$TMP_LOGO" ]]; then
 
   COLS=$(terminal_cols)
   [[ -z "$COLS" || "$COLS" == *[!0-9]* ]] && COLS=60
