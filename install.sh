@@ -21,6 +21,10 @@ if [[ "$REPO" == -* ]]; then
 fi
 
 URL="${ANTIGRAVITY_INSTALL_URL:-https://github.com/$REPO/releases/latest/download/antigravity-termux-standalone.tar.gz}"
+if [[ "$URL" != https://* ]]; then
+  printf "[ERR] Invalid ANTIGRAVITY_INSTALL_URL: must use HTTPS protocol\n" >&2
+  exit 1
+fi
 if [[ "$URL" == -* || "$URL" == *[!a-zA-Z0-9_./:-]* ]]; then
   printf "[ERR] Invalid ANTIGRAVITY_INSTALL_URL: contains unsafe characters or starts with a dash\n" >&2
   exit 1
