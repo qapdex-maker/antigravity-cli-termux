@@ -23,3 +23,7 @@
 ## 2026-07-30 - [Multi-Byte Character Slicing and Locale Sensitivity in Bash]
 **Learning:** Using pure Bash string slicing `${VAR:offset:length}` on multi-byte UTF-8 character maps (such as `·░▒▓` used for sub-character progress bar rendering) is highly locale-dependent. In byte-based locales like `C` or `POSIX` (often default in automated environments/CI pipelines), Bash operates on raw bytes, leading to garbled and corrupted terminal outputs due to slicing through multi-byte character sequences.
 **Action:** Avoid micro-optimizations that slice multi-byte UTF-8 character strings in Bash. Always prefer standard `if-elif` conditional blocks to assign multi-byte UTF-8 characters robustly.
+
+## 2026-07-31 - [Avoid Replacing Built-ins with Verbose and Incorrect Slicing Logic]
+**Learning:** Attempting to optimize standard floating-point formatting like `printf "%.1f"` using Bash parameter expansion can introduce correctness bugs by truncating decimals rather than rounding them (e.g. 45.89 becomes 45.8 instead of 45.9). Moreover, replacing a clear, standard built-in with a complex, multiline block hurts code readability with no measurable real-world performance gain.
+**Action:** Respect Bolt's philosophy to never sacrifice readability and correctness for micro-optimizations on cold execution paths.
