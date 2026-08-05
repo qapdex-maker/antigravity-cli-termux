@@ -88,6 +88,14 @@ def main():
     assert "STOPPED" in stdout_i or "🛑" in stdout_i, "Expected 'STOPPED' state in statusline"
     print("✅ New cancelled, stopped, and interrupted states are verified.")
 
+    # 5. Test aborted state
+    payload_aborted = payload.copy()
+    payload_aborted["agent_state"] = "aborted"
+    stdout_a, _, code_a = run_statusline(payload_aborted, 80)
+    assert code_a == 0
+    assert "ABORTED" in stdout_a or "🛑" in stdout_a, "Expected 'ABORTED' state in statusline"
+    print("✅ New aborted state is verified.")
+
     print("All tests passed successfully!")
 
 if __name__ == '__main__':

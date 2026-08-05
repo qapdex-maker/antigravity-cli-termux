@@ -80,6 +80,7 @@ case "$STATE" in
   failed|error)      EMOJI="❌"; LABEL="Failed" ;;
   cancelled)         EMOJI="🛑"; LABEL="Cancelled" ;;
   stopped|interrupted) EMOJI="🛑"; LABEL="Stopped" ;;
+  aborted)           EMOJI="🛑"; LABEL="Aborted" ;;
   *)            EMOJI="🤖"
                 # Fallback mapping: convert underscore to space, and capitalize first letter
                 # without spawning subshells or using Bash 4+ specific parameters
