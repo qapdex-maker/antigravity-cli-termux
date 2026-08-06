@@ -54,3 +54,8 @@
 **Vulnerability:** Failing to validate that a dynamically created temporary directory (such as via `mktemp -d`) is non-empty and actually exists before defining downstream paths or executing file operations.
 **Learning:** If `mktemp -d` fails (due to a full disk or environment issues) and returns an empty string, downstream path variables (e.g., `TMP="${SECURE_TMP_DIR}/..."`) can resolve relative to the root path (`/...`), which can lead to writing to or destroying files in unintended directory locations during cleanup/traps.
 **Prevention:** Always validate that the directory variable is non-empty and actually exists (e.g., `[[ -z "${SECURE_TMP_DIR:-}" || ! -d "$SECURE_TMP_DIR" ]]`) immediately after its creation, exiting with an error if validation fails.
+
+## 2026-08-04 - Null Byte Injection and Field Misalignment in Null-Delimited Shell Parsing
+**Vulnerability:** Parsing multi-field JSON output in Bash using null-delimited `read -d ''` blocks is highly vulnerable to field misalignment and state hijacking if any extracted string field contains embedded null bytes (`\u0000`).
+**Learning:** Although null delimiters protect against standard line-injection via newlines, an attacker-controlled JSON value (like a branch name or current workspace directory) with embedded null characters behaves as a field separator in the `read -d ''` pipeline, shifting succeeding values and overriding critical variables (such as sandbox status).
+**Prevention:** Always convert JSON-extracted string fields using `tostring` and strip out null characters with `gsub("\u0000"; "")` inside the `jq` filter itself before outputting them to the shell.
