@@ -2,6 +2,41 @@
 # Antigravity CLI - Termux Native (Setup)
 set -Eeuo pipefail
 
+# ── Colors & UX Core Helpers ──────────────────────────────────────────────────
+# UX Best Practice: Defining the terminal Colors block at the very top of installer scripts
+# ensures that all early environment, flag, and input validation errors are styled with
+# accessible color-coded indicators (such as ❌ [ERR]) to avoid dry and uninformative text logs on early exits.
+if [[ -t 1 ]]; then
+  BOLD=$'\033[1m'
+  DIM=$'\033[2m'
+  GREEN=$'\033[32m'
+  RED=$'\033[31m'
+  CYAN=$'\033[36m'
+  RESET=$'\033[0m'
+else
+  BOLD="" DIM="" GREEN="" RED="" CYAN="" RESET=""
+fi
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+# UX Best Practice: Prepending distinct emoji indicators (e.g., ℹ️ for info, ✅ for success, ❌ for errors)
+# to terminal installer logging functions ensures accessible, multi-dimensional feedback for colorblind users.
+info()    { printf '%s\n' " ℹ️  ${CYAN}[..]${RESET} ${DIM}$*${RESET}"; }
+ok()      { printf '%s\n' " ✅ ${GREEN}[OK]${RESET} $*"; }
+die() {
+  {
+    printf "\033[?25h" # Restore cursor
+    if [[ $# -gt 0 ]]; then
+      printf '\n%s\n' " ❌ ${RED}[ERR]${RESET} $*"
+    else
+      printf '\n%s\n' " ❌ ${RED}[ERR]${RESET} Installation failed or was cancelled."
+    fi
+    printf "For manual patching and installation:\n"
+    printf "%shttps://gist.github.com/Brajesh2022/e42160d29b55417db6c18c52dd1d6d37%s\n\n" "$CYAN" "$RESET"
+  } >&2
+  exit 1
+}
+divider() { printf '%s\n' "${DIM}────────────────────────────────────────${RESET}"; }
+
 # Security Enhancement (Sentinel): Initialize critical variables to prevent environment hijacking
 # and arbitrary file deletion/move vulnerabilities (CWE-377, CWE-59, CWE-459).
 ANTIGRAVITY_BAK=""
@@ -12,38 +47,33 @@ INSTALL_SUCCESS=0
 
 REPO="${ANTIGRAVITY_REPO:-wallentx/antigravity-cli-termux}"
 if [[ "$REPO" == -* || "$REPO" == *[!a-zA-Z0-9_./-]* ]]; then
-  printf "[ERR] Invalid ANTIGRAVITY_REPO: contains unsafe characters or starts with a dash\n" >&2
-  exit 1
+  die "Invalid ANTIGRAVITY_REPO: contains unsafe characters or starts with a dash"
 fi
 if [[ "$REPO" == -* ]]; then
-  printf "[ERR] Invalid ANTIGRAVITY_REPO: cannot start with a dash\n" >&2
-  exit 1
+  die "Invalid ANTIGRAVITY_REPO: cannot start with a dash"
 fi
 
 URL="${ANTIGRAVITY_INSTALL_URL:-https://github.com/$REPO/releases/latest/download/antigravity-termux-standalone.tar.gz}"
 if [[ "$URL" != https://* ]]; then
-  printf "[ERR] Invalid ANTIGRAVITY_INSTALL_URL: must use HTTPS protocol\n" >&2
-  exit 1
+  die "Invalid ANTIGRAVITY_INSTALL_URL: must use HTTPS protocol"
 fi
 if [[ "$URL" == -* || "$URL" == *[!a-zA-Z0-9_./:-]* ]]; then
-  printf "[ERR] Invalid ANTIGRAVITY_INSTALL_URL: contains unsafe characters or starts with a dash\n" >&2
-  exit 1
+  die "Invalid ANTIGRAVITY_INSTALL_URL: contains unsafe characters or starts with a dash"
 fi
 if [[ "$URL" == -* ]]; then
-  printf "[ERR] Invalid ANTIGRAVITY_INSTALL_URL: cannot start with a dash\n" >&2
-  exit 1
+  die "Invalid ANTIGRAVITY_INSTALL_URL: cannot start with a dash"
 fi
 
 # ── Environment Detection ─────────────────────────────────────────────────────
 if [[ -z "${TERMUX_VERSION:-}" || -z "${PREFIX:-}" ]]; then
-  cat >&2 <<'EOF'
-[ERR] This installer is only for native Termux.
+  cat >&2 <<EOF
+ ❌ ${RED}[ERR]${RESET} ${BOLD}This installer is only for native Termux.${RESET}
 
 PRoot environments can use Google's official Antigravity CLI binary
 directly, so this Termux-specific standalone port does not install there.
 Use the official installer instead:
 
-  curl -fsSL https://antigravity.google/cli/install.sh | bash
+  ${CYAN}curl -fsSL https://antigravity.google/cli/install.sh | bash${RESET}
 
 EOF
   exit 1
@@ -51,8 +81,7 @@ fi
 
 # Security Enhancement (Sentinel): Validate PREFIX to prevent option/command injection and path traversal
 if [[ "$PREFIX" == -* || "$PREFIX" == *[!a-zA-Z0-9_./-]* ]]; then
-  printf "[ERR] Invalid PREFIX: contains unsafe characters or starts with a dash\n" >&2
-  exit 1
+  die "Invalid PREFIX: contains unsafe characters or starts with a dash"
 fi
 
 ENV_TYPE="termux"
@@ -63,8 +92,7 @@ INSTALL_BIN_DIR="${TERMUX_PREFIX}/bin"
 # with restricted 0700 permissions to mitigate local race conditions, symlink attacks, and predictable tmp files.
 SECURE_TMP_DIR=$(mktemp -d "${TERMUX_PREFIX}/tmp/antigravity-install.XXXXXX" 2>/dev/null || mktemp -d)
 if [[ -z "${SECURE_TMP_DIR:-}" || ! -d "$SECURE_TMP_DIR" ]]; then
-  printf "[ERR] Failed to create secure temporary directory\n" >&2
-  exit 1
+  die "Failed to create secure temporary directory"
 fi
 chmod 0700 "$SECURE_TMP_DIR"
 
@@ -103,36 +131,6 @@ handle_cancel() {
 
 trap cleanup EXIT
 trap handle_cancel INT TERM
-
-# ── Colors ────────────────────────────────────────────────────────────────────
-if [[ -t 1 ]]; then
-  BOLD=$'\033[1m'
-  DIM=$'\033[2m'
-  GREEN=$'\033[32m'
-  RED=$'\033[31m'
-  CYAN=$'\033[36m'
-  RESET=$'\033[0m'
-else
-  BOLD="" DIM="" GREEN="" RED="" CYAN="" RESET=""
-fi
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-info()    { printf '%s\n' " ℹ️  ${CYAN}[..]${RESET} ${DIM}$*${RESET}"; }
-ok()      { printf '%s\n' " ✅ ${GREEN}[OK]${RESET} $*"; }
-die() {
-  {
-    printf "\033[?25h" # Restore cursor
-    if [[ $# -gt 0 ]]; then
-      printf '\n%s\n' " ❌ ${RED}[ERR]${RESET} $*"
-    else
-      printf '\n%s\n' " ❌ ${RED}[ERR]${RESET} Installation failed or was cancelled."
-    fi
-    printf "For manual patching and installation:\n"
-    printf "%shttps://gist.github.com/Brajesh2022/e42160d29b55417db6c18c52dd1d6d37%s\n\n" "$CYAN" "$RESET"
-  } >&2
-  exit 1
-}
-divider() { printf '%s\n' "${DIM}────────────────────────────────────────${RESET}"; }
 
 terminal_cols() {
   if [[ -r /dev/tty ]]; then
