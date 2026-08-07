@@ -27,3 +27,7 @@
 ## 2026-07-31 - [Avoid Replacing Built-ins with Verbose and Incorrect Slicing Logic]
 **Learning:** Attempting to optimize standard floating-point formatting like `printf "%.1f"` using Bash parameter expansion can introduce correctness bugs by truncating decimals rather than rounding them (e.g. 45.89 becomes 45.8 instead of 45.9). Moreover, replacing a clear, standard built-in with a complex, multiline block hurts code readability with no measurable real-world performance gain.
 **Action:** Respect Bolt's philosophy to never sacrifice readability and correctness for micro-optimizations on cold execution paths.
+
+## 2026-08-05 - [Bypassing Spawning External Tools in Terminal Column Detection]
+**Learning:** Checking the native shell `$COLUMNS` environment variable (when it is populated and strictly numeric) before executing external `tput` calls in environment detection completely eliminates process fork/exec overhead.
+**Action:** Prioritize native shell variable inspection (with strict validation, e.g. `[[ -n "${COLUMNS:-}" && "$COLUMNS" =~ ^[0-9]+$ ]]`) before falling back to spawning external terminal metadata queries.
