@@ -95,6 +95,20 @@ def main():
     assert "🟢 Idle | repo (🔒 Sandbox ON)" in title, f"Expected missing VCS to parse cleanly without errors, got: {title}"
     print("✅ Test 6 Passed: Completely missing VCS parsed cleanly.")
 
+    # Test 7: Branch name truncation (branch name > 15 characters)
+    payload7 = {
+        "agent_state": "working",
+        "workspace": {"current_dir": "/home/user/repo"},
+        "sandbox": {"enabled": True},
+        "vcs": {"branch": "feature-very-long-branch-name", "dirty": False}
+    }
+    stdout, stderr, code = run_title(payload7)
+    assert code == 0, f"Error: {stderr}"
+    title = stdout.strip()
+    assert "🌿 feature-v...ame" in title, f"Expected truncated branch name, got: {title}"
+    assert "🔒 Sandbox ON" in title, f"Expected sandbox status to be visible, got: {title}"
+    print("✅ Test 7 Passed: Long branch name truncated successfully.")
+
     print("All title.sh tests passed successfully!")
 
 if __name__ == '__main__':
