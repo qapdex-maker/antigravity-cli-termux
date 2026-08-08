@@ -47,16 +47,17 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
   read -d '' -r COLS || true
   read -d '' -r _ || true
 } < <(jq -j '
-  (.agent_state // "idle"), "\u0000",
-  (.context_window.used_percentage // 0), "\u0000",
-  (.vcs?.branch // ""), "\u0000",
-  (.vcs?.dirty // false), "\u0000",
-  (.sandbox.enabled // false), "\u0000",
-  (.artifact_count // 0), "\u0000",
-  (if .subagents | type == "array" then (.subagents | length) else 0 end), "\u0000",
-  (.task_count // 0), "\u0000",
-  (.model.display_name // ""), "\u0000",
-  (.terminal_width // 80), "\u0000",
+  def clean(val): val | tostring | gsub("\u0000"; "");
+  clean(.agent_state // "idle"), "\u0000",
+  clean(.context_window.used_percentage // 0), "\u0000",
+  clean(.vcs?.branch // ""), "\u0000",
+  clean(.vcs?.dirty // false), "\u0000",
+  clean(.sandbox.enabled // false), "\u0000",
+  clean(.artifact_count // 0), "\u0000",
+  clean(if .subagents | type == "array" then (.subagents | length) else 0 end), "\u0000",
+  clean(.task_count // 0), "\u0000",
+  clean(.model.display_name // ""), "\u0000",
+  clean(.terminal_width // 80), "\u0000",
   "END\u0000"
 ' 2>/dev/null)
 
