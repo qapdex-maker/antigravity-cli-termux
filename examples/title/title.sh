@@ -110,9 +110,9 @@ if [ -n "$VCS_BRANCH" ]; then
   fi
 
   if [ "$VCS_DIRTY" = "true" ]; then
-    VCS_TXT=" (🌿 $DISPLAY_BRANCH*)"
+    VCS_TXT=" (🌿 ${DISPLAY_BRANCH}*)"
   else
-    VCS_TXT=" (🌿 $DISPLAY_BRANCH)"
+    VCS_TXT=" (🌿 ${DISPLAY_BRANCH})"
   fi
 fi
 
