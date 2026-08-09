@@ -27,3 +27,7 @@
 ## 2026-07-31 - [Avoid Replacing Built-ins with Verbose and Incorrect Slicing Logic]
 **Learning:** Attempting to optimize standard floating-point formatting like `printf "%.1f"` using Bash parameter expansion can introduce correctness bugs by truncating decimals rather than rounding them (e.g. 45.89 becomes 45.8 instead of 45.9). Moreover, replacing a clear, standard built-in with a complex, multiline block hurts code readability with no measurable real-world performance gain.
 **Action:** Respect Bolt's philosophy to never sacrifice readability and correctness for micro-optimizations on cold execution paths.
+
+## 2026-08-01 - [Avoid Fork/Exec Overhead of External tput Calls via Native COLUMNS]
+**Learning:** Shell scripts frequently spawn external utilities like `tput cols` to measure terminal dimensions. While tput behaves accurately, repeated process forks/execs introduce measurable performance overhead. Prioritizing native shell variables like `$COLUMNS` (when populated and strictly numeric) completely bypasses subprocess spawns.
+**Action:** Prioritize native shell variable references like `$COLUMNS` over external command execution (like `tput cols`) in environment/screen detection helpers.
