@@ -27,3 +27,7 @@
 ## 2026-07-31 - [Avoid Replacing Built-ins with Verbose and Incorrect Slicing Logic]
 **Learning:** Attempting to optimize standard floating-point formatting like `printf "%.1f"` using Bash parameter expansion can introduce correctness bugs by truncating decimals rather than rounding them (e.g. 45.89 becomes 45.8 instead of 45.9). Moreover, replacing a clear, standard built-in with a complex, multiline block hurts code readability with no measurable real-world performance gain.
 **Action:** Respect Bolt's philosophy to never sacrifice readability and correctness for micro-optimizations on cold execution paths.
+
+## 2026-08-04 - [Locale-Safe and Ultra-Fast Progress Bar Slicing]
+**Learning:** Slicing multi-byte UTF-8 character strings (such as `████` or `░░░░`) using standard Bash slicing `${VAR:offset:length}` is highly locale-dependent. In byte-based locales (like `C` or `POSIX`), Bash slices by bytes instead of characters, causing progress bars to truncate or produce garbled invalid UTF-8 sequences. Slicing ASCII strings (`#` and `-`) is always 100% safe, and converting them to UTF-8 blocks using high-performance pure Bash parameter expansion `${VAR//#/█}` executes incredibly fast with no subprocesses or subshells.
+**Action:** Always slice ASCII-only strings as placeholders in progress bars, then replace them with multi-byte UTF-8 characters via native Bash parameter expansion to ensure perfect correctness and speed across all terminal locales.

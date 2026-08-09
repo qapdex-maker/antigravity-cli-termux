@@ -103,10 +103,15 @@ esac
 # Build multi-dimensional branch text badge and safety visual cue since color is not supported in typical window titles
 VCS_TXT=""
 if [ -n "$VCS_BRANCH" ]; then
+  DISPLAY_BRANCH="$VCS_BRANCH"
+  if [ "${#VCS_BRANCH}" -gt 15 ]; then
+    DISPLAY_BRANCH="${VCS_BRANCH:0:9}...${VCS_BRANCH: -3}"
+  fi
+
   if [ "$VCS_DIRTY" = "true" ]; then
-    VCS_TXT=" (🌿 $VCS_BRANCH*)"
+    VCS_TXT=" (🌿 ${DISPLAY_BRANCH}*)"
   else
-    VCS_TXT=" (🌿 $VCS_BRANCH)"
+    VCS_TXT=" (🌿 ${DISPLAY_BRANCH})"
   fi
 fi
 

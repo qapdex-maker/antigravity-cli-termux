@@ -135,7 +135,11 @@ die() {
 divider() { printf '%s\n' "${DIM}────────────────────────────────────────${RESET}"; }
 
 terminal_cols() {
-  if [[ -r /dev/tty ]]; then
+  # Performance Optimization (Bolt): Check the native shell COLUMNS variable first
+  # to avoid the fork/exec overhead of spawning the external tput process.
+  if [[ -n "${COLUMNS:-}" && "$COLUMNS" != *[!0-9]* ]]; then
+    echo "$COLUMNS"
+  elif [[ -r /dev/tty ]]; then
     tput cols </dev/tty 2>/dev/null || echo 60
   else
     tput cols 2>/dev/null || echo 60
@@ -221,8 +225,11 @@ download_with_progress() {
   curl -fLs --connect-timeout 15 -m 120 -H "Cache-Control: no-cache" -o "$dest" -- "$url" >/dev/null 2>&1 &
   local pid=$!
 
-  local full_bar="████████████████████████████████████████████████████████████"
-  local empty_bar="░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
+  # Performance & Locale Optimization (Bolt): Use ASCII-placeholder slicing to avoid byte-slicing
+  # truncation and terminal corruption in non-UTF-8 locales (like C or POSIX), and translate
+  # placeholders to multi-byte UTF-8 block characters using high-speed parameter expansion.
+  local full_bar_ascii="############################################################"
+  local empty_bar_ascii="------------------------------------------------------------"
 
   # Performance Optimization (Bolt): Pre-calculate the total size in megabytes outside the progress bar
   # loop to avoid redundant divisions, multiplication, and modulo operations on every 150ms tick.
@@ -250,7 +257,9 @@ download_with_progress() {
     local pct=$(( total_size > 0 ? current_size * 100 / total_size : 0 ))
     (( pct > 100 )) && pct=100
     local filled=$(( pct * w / 100 ))
-    local bar="${full_bar:0:filled}${empty_bar:0:w-filled}"
+    local bar_ascii="${full_bar_ascii:0:filled}${empty_bar_ascii:0:w-filled}"
+    local bar="${bar_ascii//#/█}"
+    bar="${bar//-/░}"
 
     local c_mb_i=$(( current_size / 1048576 ))
     local c_mb_d=$(( (current_size * 10 / 1048576) % 10 ))
@@ -266,7 +275,8 @@ download_with_progress() {
   wait "$pid" || exit_status=$?
 
   if [ $exit_status -eq 0 ]; then
-    local bar="${full_bar:0:w}"
+    local bar_ascii="${full_bar_ascii:0:w}"
+    local bar="${bar_ascii//#/█}"
     local t_mb_i=$(( total_size / 1048576 ))
     local t_mb_d=$(( (total_size * 10 / 1048576) % 10 ))
     printf "\r\033[K ✅ %s[OK]%s [%s] 100%% %s%5d.%dM / %4d.%dM%s\n" \
