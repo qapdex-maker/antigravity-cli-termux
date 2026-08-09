@@ -95,6 +95,32 @@ def main():
     assert "🟢 Idle | repo (🔒 Sandbox ON)" in title, f"Expected missing VCS to parse cleanly without errors, got: {title}"
     print("✅ Test 6 Passed: Completely missing VCS parsed cleanly.")
 
+    # Test 7: Branch name truncation (longer than 15 characters)
+    payload7_clean = {
+        "agent_state": "idle",
+        "workspace": {"current_dir": "/home/user/repo"},
+        "sandbox": {"enabled": True},
+        "vcs": {"branch": "feature-extremely-long-name", "dirty": False}
+    }
+    stdout, stderr, code = run_title(payload7_clean)
+    assert code == 0, f"Error: {stderr}"
+    title = stdout.strip()
+    assert "feature-e...ame" in title, f"Expected truncated branch feature-e...ame, got: {title}"
+    assert "feature-extremely-long-name" not in title, f"Expected full long branch to be truncated, got: {title}"
+
+    payload7_dirty = {
+        "agent_state": "idle",
+        "workspace": {"current_dir": "/home/user/repo"},
+        "sandbox": {"enabled": True},
+        "vcs": {"branch": "feature-extremely-long-name", "dirty": True}
+    }
+    stdout, stderr, code = run_title(payload7_dirty)
+    assert code == 0, f"Error: {stderr}"
+    title = stdout.strip()
+    assert "feature-e...ame*" in title, f"Expected dirty truncated branch feature-e...ame*, got: {title}"
+
+    print("✅ Test 7 Passed: VCS branch name (> 15 chars) truncated correctly (clean & dirty).")
+
     print("All title.sh tests passed successfully!")
 
 if __name__ == '__main__':
