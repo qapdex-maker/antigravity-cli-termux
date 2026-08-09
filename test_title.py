@@ -95,17 +95,22 @@ def main():
     assert "🟢 Idle | repo (🔒 Sandbox ON)" in title, f"Expected missing VCS to parse cleanly without errors, got: {title}"
     print("✅ Test 6 Passed: Completely missing VCS parsed cleanly.")
 
-    # Test 7: Aborted State
+    # Test 7: Null byte injection mitigation
     payload7 = {
-        "agent_state": "aborted",
-        "workspace": {"current_dir": "/home/user/repo"},
-        "sandbox": {"enabled": True}
+        "agent_state": "idle",
+        "workspace": {"current_dir": "/home/user/project\u0000false\u0000"},
+        "sandbox": {"enabled": True},
+        "vcs": {"branch": "main\u0000dirty\u0000", "dirty": False}
     }
     stdout, stderr, code = run_title(payload7)
     assert code == 0, f"Error: {stderr}"
     title = stdout.strip()
-    assert "🛑 Aborted | repo" in title, f"Expected aborted & repo, got: {title}"
-    print("✅ Test 7 Passed: Aborted state mapped cleanly.")
+    # If the null byte injection was successful, Sandbox would have been hijacked to OFF.
+    # We assert that Sandbox is still ON (🔒 Sandbox ON) and branch was not misaligned.
+    assert "🔒 Sandbox ON" in title, f"Expected sandbox to remain ON despite null byte injection, got: {title}"
+    assert "projectfalse" in title, f"Expected null bytes to be stripped/removed from directory, got: {title}"
+    assert "maindirty" in title, f"Expected null bytes to be stripped/removed from branch, got: {title}"
+    print("✅ Test 7 Passed: Null byte injection and field misalignment mitigated.")
 
     print("All title.sh tests passed successfully!")
 

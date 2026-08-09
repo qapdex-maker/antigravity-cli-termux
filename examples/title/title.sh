@@ -14,11 +14,11 @@ set -euo pipefail
   read -d '' -r VCS_DIRTY || true
   read -d '' -r _ || true
 } < <(jq -j '
-  (.agent_state // "idle"), "\u0000",
-  (.workspace.current_dir // ""), "\u0000",
-  (.sandbox.enabled // false), "\u0000",
-  (.vcs?.branch // ""), "\u0000",
-  (.vcs?.dirty // false), "\u0000",
+  (.agent_state // "idle" | tostring | gsub("\u0000"; "")), "\u0000",
+  (.workspace.current_dir // "" | tostring | gsub("\u0000"; "")), "\u0000",
+  (.sandbox.enabled // false | tostring | gsub("\u0000"; "")), "\u0000",
+  (.vcs?.branch // "" | tostring | gsub("\u0000"; "")), "\u0000",
+  (.vcs?.dirty // false | tostring | gsub("\u0000"; "")), "\u0000",
   "END\u0000"
 ' 2>/dev/null)
 
