@@ -95,6 +95,18 @@ def main():
     assert "🟢 Idle | repo (🔒 Sandbox ON)" in title, f"Expected missing VCS to parse cleanly without errors, got: {title}"
     print("✅ Test 6 Passed: Completely missing VCS parsed cleanly.")
 
+    # Test 7: Aborted State
+    payload7 = {
+        "agent_state": "aborted",
+        "workspace": {"current_dir": "/home/user/repo"},
+        "sandbox": {"enabled": True}
+    }
+    stdout, stderr, code = run_title(payload7)
+    assert code == 0, f"Error: {stderr}"
+    title = stdout.strip()
+    assert "🛑 Aborted | repo" in title, f"Expected aborted & repo, got: {title}"
+    print("✅ Test 7 Passed: Aborted state mapped cleanly.")
+
     print("All title.sh tests passed successfully!")
 
 if __name__ == '__main__':
