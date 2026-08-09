@@ -81,6 +81,7 @@ case "$STATE" in
   failed|error)      EMOJI="❌"; LABEL="Failed" ;;
   cancelled)         EMOJI="🛑"; LABEL="Cancelled" ;;
   stopped|interrupted) EMOJI="🛑"; LABEL="Stopped" ;;
+  aborted)           EMOJI="🛑"; LABEL="Aborted" ;;
   *)            EMOJI="🤖"
                 # Fallback mapping: convert underscore to space, and capitalize first letter
                 # without spawning subshells or using Bash 4+ specific parameters
@@ -103,10 +104,16 @@ esac
 # Build multi-dimensional branch text badge and safety visual cue since color is not supported in typical window titles
 VCS_TXT=""
 if [ -n "$VCS_BRANCH" ]; then
+  # Truncate branch name if it exceeds 15 characters to preserve visual layout robustness and keep critical status persistently visible
+  DISPLAY_BRANCH="$VCS_BRANCH"
+  if [ "${#VCS_BRANCH}" -gt 15 ]; then
+    DISPLAY_BRANCH="${VCS_BRANCH:0:9}...${VCS_BRANCH: -3}"
+  fi
+
   if [ "$VCS_DIRTY" = "true" ]; then
-    VCS_TXT=" (🌿 $VCS_BRANCH*)"
+    VCS_TXT=" (🌿 $DISPLAY_BRANCH*)"
   else
-    VCS_TXT=" (🌿 $VCS_BRANCH)"
+    VCS_TXT=" (🌿 $DISPLAY_BRANCH)"
   fi
 fi
 
