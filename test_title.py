@@ -95,18 +95,21 @@ def main():
     assert "🟢 Idle | repo (🔒 Sandbox ON)" in title, f"Expected missing VCS to parse cleanly without errors, got: {title}"
     print("✅ Test 6 Passed: Completely missing VCS parsed cleanly.")
 
-    # Test 7: Long VCS branch truncation (length > 15)
+    # Test 7: Sanitization and safety with embedded null bytes in user input (Regression test)
     payload7 = {
         "agent_state": "working",
-        "workspace": {"current_dir": "/home/user/repo"},
-        "sandbox": {"enabled": True},
-        "vcs": {"branch": "feature-very-long-branch", "dirty": False}
+        "workspace": {"current_dir": "/home/user/repo\u0000true\u0000false"},
+        "sandbox": {"enabled": False},
+        "vcs": {"branch": "feature\u0000branch", "dirty": False}
     }
     stdout, stderr, code = run_title(payload7)
     assert code == 0, f"Error: {stderr}"
     title = stdout.strip()
-    assert "feature-v...nch" in title, f"Expected truncated branch feature-v...nch, got: {title}"
-    print("✅ Test 7 Passed: Long VCS branch name successfully truncated to keep window title clean.")
+    # Embedded null bytes should be removed inside the workspace path and branch name by safe(v)
+    assert "repotruefalse" in title, f"Expected workspace to contain safely stripped null fields as one string, got: {title}"
+    assert "featurebranch" in title, f"Expected sanitized branch featurebranch, got: {title}"
+    assert "🔓 Sandbox OFF" in title, f"Expected sandbox status to not be overridden/misaligned, got: {title}"
+    print("✅ Test 7 Passed: Sanitization and safety with embedded null bytes verified successfully.")
 
     print("All title.sh tests passed successfully!")
 
