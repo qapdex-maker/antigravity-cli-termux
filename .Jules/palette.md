@@ -49,3 +49,7 @@
 ## 2026-08-03 - Contrast-Enhanced Terminal Progress Bars
 **Learning:** In terminal progress bars (such as context-window usage trackers), coloring both the filled and unfilled portions with a single accent color diminishes the visual boundary between active usage and remaining capacity. Applying a dimmed, inactive color (like `FG_GRAY`) specifically to the empty dots of the progress bar, while reserving the bright warning/accent color for the filled segment, dramatically enhances contrast and visual scanning.
 **Action:** Always color empty progress bar components with a low-contrast neutral/gray hue while utilizing high-contrast/bold semantic colors solely for active/filled metrics.
+
+## 2026-08-07 - Dynamic VCS Branch Truncation in Desktop Window Titles
+**Learning:** In constrained layout environments like desktop taskbars or terminal tab headers, extremely long Version Control System (VCS) branch names in window titles can easily overflow, pushing crucial status indicators (such as Sandbox ON/OFF) completely out of view. Truncating branch names that exceed 15 characters to a safe prefix and suffix using substring slicing (e.g., `feature-e...ame`) preserves visual layout robustness and keeps critical system safety status persistently visible.
+**Action:** Always truncate long branch names in window titles to a maximum of 15 characters to guarantee the visibility of subsequent critical indicators.
