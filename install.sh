@@ -135,8 +135,9 @@ die() {
 divider() { printf '%s\n' "${DIM}────────────────────────────────────────${RESET}"; }
 
 terminal_cols() {
-  # Performance Optimization (Bolt): Check the native shell COLUMNS variable first
-  # to avoid the fork/exec overhead of spawning the external tput process.
+  # Performance Optimization (Bolt): Prioritizing checking the native shell $COLUMNS variable
+  # when it is populated and strictly numeric completely avoids the fork/exec process overhead
+  # of spawning the external `tput` tool.
   if [[ -n "${COLUMNS:-}" && "$COLUMNS" != *[!0-9]* ]]; then
     echo "$COLUMNS"
   elif [[ -r /dev/tty ]]; then
