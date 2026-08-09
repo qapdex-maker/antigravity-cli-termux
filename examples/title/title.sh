@@ -14,11 +14,12 @@ set -euo pipefail
   read -d '' -r VCS_DIRTY || true
   read -d '' -r _ || true
 } < <(jq -j '
-  (.agent_state // "idle"), "\u0000",
-  (.workspace.current_dir // ""), "\u0000",
-  (.sandbox.enabled // false), "\u0000",
-  (.vcs?.branch // ""), "\u0000",
-  (.vcs?.dirty // false), "\u0000",
+  def safe(f): (if f == null then "" else f end) | tostring | gsub("\u0000"; "");
+  safe(.agent_state // "idle"), "\u0000",
+  safe(.workspace.current_dir), "\u0000",
+  safe(.sandbox.enabled // false), "\u0000",
+  safe(.vcs?.branch), "\u0000",
+  safe(.vcs?.dirty // false), "\u0000",
   "END\u0000"
 ' 2>/dev/null)
 
@@ -80,6 +81,7 @@ case "$STATE" in
   failed|error)      EMOJI="❌"; LABEL="Failed" ;;
   cancelled)         EMOJI="🛑"; LABEL="Cancelled" ;;
   stopped|interrupted) EMOJI="🛑"; LABEL="Stopped" ;;
+  aborted)           EMOJI="🛑"; LABEL="Aborted" ;;
   *)            EMOJI="🤖"
                 # Fallback mapping: convert underscore to space, and capitalize first letter
                 # without spawning subshells or using Bash 4+ specific parameters
