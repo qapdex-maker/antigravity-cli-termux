@@ -88,6 +88,19 @@ def main():
     assert "STOPPED" in stdout_i or "🛑" in stdout_i, "Expected 'STOPPED' state in statusline"
     print("✅ New cancelled, stopped, and interrupted states are verified.")
 
+    # Test 5: Null byte injection mitigation
+    payload_null = payload.copy()
+    payload_null["vcs"] = {"branch": "main\u0000true\u0000", "dirty": False}
+    payload_null["model"] = {"display_name": "claude\u0000sonnet"}
+    stdout_n, stderr_n, code_n = run_statusline(payload_null, 80)
+    assert code_n == 0, f"Error: {stderr_n}"
+    # If the null byte injection was successful, vcs_dirty would be hijacked to "true".
+    # Since we strip null bytes, vcs_dirty should remain false, so the dirty indicator "*" should not be printed.
+    assert "*" not in stdout_n, f"Expected vcs_dirty to remain false and no '*' in statusline, got: {stdout_n}"
+    assert "claudesonnet" in stdout_n, f"Expected null bytes to be stripped from model name, got: {stdout_n}"
+    assert "maintrue" in stdout_n, f"Expected null bytes to be stripped from branch name, got: {stdout_n}"
+    print("✅ Test 5 Passed: Null byte injection and field misalignment mitigated in statusline.")
+
     print("All tests passed successfully!")
 
 if __name__ == '__main__':

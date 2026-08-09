@@ -14,11 +14,11 @@ set -euo pipefail
   read -d '' -r VCS_DIRTY || true
   read -d '' -r _ || true
 } < <(jq -j '
-  (.agent_state // "idle"), "\u0000",
-  (.workspace.current_dir // ""), "\u0000",
-  (.sandbox.enabled // false), "\u0000",
-  (.vcs?.branch // ""), "\u0000",
-  (.vcs?.dirty // false), "\u0000",
+  (.agent_state // "idle" | tostring | gsub("\u0000"; "")), "\u0000",
+  (.workspace.current_dir // "" | tostring | gsub("\u0000"; "")), "\u0000",
+  (.sandbox.enabled // false | tostring | gsub("\u0000"; "")), "\u0000",
+  (.vcs?.branch // "" | tostring | gsub("\u0000"; "")), "\u0000",
+  (.vcs?.dirty // false | tostring | gsub("\u0000"; "")), "\u0000",
   "END\u0000"
 ' 2>/dev/null)
 
@@ -80,6 +80,7 @@ case "$STATE" in
   failed|error)      EMOJI="❌"; LABEL="Failed" ;;
   cancelled)         EMOJI="🛑"; LABEL="Cancelled" ;;
   stopped|interrupted) EMOJI="🛑"; LABEL="Stopped" ;;
+  aborted)           EMOJI="🛑"; LABEL="Aborted" ;;
   *)            EMOJI="🤖"
                 # Fallback mapping: convert underscore to space, and capitalize first letter
                 # without spawning subshells or using Bash 4+ specific parameters
@@ -102,10 +103,15 @@ esac
 # Build multi-dimensional branch text badge and safety visual cue since color is not supported in typical window titles
 VCS_TXT=""
 if [ -n "$VCS_BRANCH" ]; then
+  DISPLAY_BRANCH="$VCS_BRANCH"
+  if [ "${#VCS_BRANCH}" -gt 15 ]; then
+    DISPLAY_BRANCH="${VCS_BRANCH:0:9}...${VCS_BRANCH: -3}"
+  fi
+
   if [ "$VCS_DIRTY" = "true" ]; then
-    VCS_TXT=" (🌿 $VCS_BRANCH*)"
+    VCS_TXT=" (🌿 ${DISPLAY_BRANCH}*)"
   else
-    VCS_TXT=" (🌿 $VCS_BRANCH)"
+    VCS_TXT=" (🌿 ${DISPLAY_BRANCH})"
   fi
 fi
 
