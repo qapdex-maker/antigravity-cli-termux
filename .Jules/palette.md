@@ -49,3 +49,7 @@
 ## 2026-08-03 - Contrast-Enhanced Terminal Progress Bars
 **Learning:** In terminal progress bars (such as context-window usage trackers), coloring both the filled and unfilled portions with a single accent color diminishes the visual boundary between active usage and remaining capacity. Applying a dimmed, inactive color (like `FG_GRAY`) specifically to the empty dots of the progress bar, while reserving the bright warning/accent color for the filled segment, dramatically enhances contrast and visual scanning.
 **Action:** Always color empty progress bar components with a low-contrast neutral/gray hue while utilizing high-contrast/bold semantic colors solely for active/filled metrics.
+
+## 2026-08-04 - Colors Block and Utility Early Initialization in Installer Scripts
+**Learning:** Initializing the terminal colors and UI logging/exit helpers (like `die`) at the absolute beginning of an installer shell script (before any parameter, repository, or system environment validation is performed) ensures that even the earliest configuration failures are styled with high-contrast, multi-dimensional error indicators (`❌ [ERR]`) instead of failing with unformatted plain terminal outputs.
+**Action:** Always place ANSI style variable declarations and standardized logging/exit functions as the topmost blocks in CLI installer scripts.

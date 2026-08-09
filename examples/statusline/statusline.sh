@@ -133,6 +133,7 @@ case "$STATE" in
   failed|error)      S="${FG_BRIGHT_RED}${B}❌ FAILED${R}" ;;
   cancelled)         S="${FG_BRIGHT_RED}${B}🛑 CANCELLED${R}" ;;
   stopped|interrupted) S="${FG_BRIGHT_RED}${B}🛑 STOPPED${R}" ;;
+  aborted)           S="${FG_BRIGHT_RED}${B}🛑 ABORTED${R}" ;;
   *)            # Performance Optimization (Bolt): Pure Bash transliteration to uppercase avoids fork/exec overhead.
                 # Avoids `${STATE^^}` for compatibility with older Bash versions (like Bash 3.2 on macOS).
                 UPPER_STATE="$STATE"
