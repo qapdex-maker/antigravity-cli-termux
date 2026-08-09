@@ -47,16 +47,17 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
   read -d '' -r COLS || true
   read -d '' -r _ || true
 } < <(jq -j '
-  (.agent_state // "idle" | tostring | gsub("\u0000"; "")), "\u0000",
-  (.context_window.used_percentage // 0 | tostring | gsub("\u0000"; "")), "\u0000",
-  (.vcs?.branch // "" | tostring | gsub("\u0000"; "")), "\u0000",
-  (.vcs?.dirty // false | tostring | gsub("\u0000"; "")), "\u0000",
-  (.sandbox.enabled // false | tostring | gsub("\u0000"; "")), "\u0000",
-  (.artifact_count // 0 | tostring | gsub("\u0000"; "")), "\u0000",
-  (if .subagents | type == "array" then (.subagents | length) else 0 end | tostring | gsub("\u0000"; "")), "\u0000",
-  (.task_count // 0 | tostring | gsub("\u0000"; "")), "\u0000",
-  (.model.display_name // "" | tostring | gsub("\u0000"; "")), "\u0000",
-  (.terminal_width // 80 | tostring | gsub("\u0000"; "")), "\u0000",
+  def safe(f): (if f == null then "" else f end) | tostring | gsub("\u0000"; "");
+  safe(.agent_state // "idle"), "\u0000",
+  safe(.context_window.used_percentage // 0), "\u0000",
+  safe(.vcs?.branch), "\u0000",
+  safe(.vcs?.dirty // false), "\u0000",
+  safe(.sandbox.enabled // false), "\u0000",
+  safe(.artifact_count // 0), "\u0000",
+  safe(if .subagents | type == "array" then (.subagents | length) else 0 end), "\u0000",
+  safe(.task_count // 0), "\u0000",
+  safe(.model.display_name), "\u0000",
+  safe(.terminal_width // 80), "\u0000",
   "END\u0000"
 ' 2>/dev/null)
 
