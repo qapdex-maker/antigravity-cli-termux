@@ -133,10 +133,9 @@ trap cleanup EXIT
 trap handle_cancel INT TERM
 
 terminal_cols() {
-  # Performance Optimization (Bolt): Prioritizing checking the native shell $COLUMNS variable
-  # when it is populated and strictly numeric completely avoids the fork/exec process overhead
-  # of spawning the external `tput` tool.
-  if [[ -n "${COLUMNS:-}" && "$COLUMNS" =~ ^[0-9]+$ ]]; then
+  # Performance Optimization (Bolt): Prioritize checking the native shell $COLUMNS variable
+  # when it is populated and strictly numeric to completely avoid spawning 'tput'.
+  if [[ -n "${COLUMNS:-}" && "$COLUMNS" != *[!0-9]* ]]; then
     echo "$COLUMNS"
   elif [[ -r /dev/tty ]]; then
     tput cols </dev/tty 2>/dev/null || echo 60
