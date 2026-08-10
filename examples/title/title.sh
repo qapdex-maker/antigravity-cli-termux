@@ -31,16 +31,11 @@ SANDBOX="${SANDBOX//$'\r'/}"
 VCS_BRANCH="${VCS_BRANCH//$'\r'/}"
 VCS_DIRTY="${VCS_DIRTY//$'\r'/}"
 
-# Fallback in case of empty input or parsing error
-[[ -z "$STATE" ]] && STATE="idle"
-[[ -z "$CWD" ]] && CWD=""
-[[ -z "$SANDBOX" ]] && SANDBOX="false"
-[[ -z "$VCS_BRANCH" ]] && VCS_BRANCH=""
-[[ -z "$VCS_DIRTY" ]] && VCS_DIRTY="false"
-
-# Try to extract CitC workspace name from CWD
-# Performance Optimization (Bolt): Avoid regex `=~` engine compilation and execution overhead by using pure Bash parameter expansion.
-if [ -n "$CWD" ]; then
+# ─── Workspace Extraction, Input Validation, Sanitization & Fallbacks ───────
+# Ensure variables are strictly validated, sanitized, and set to default fallbacks in a single pass.
+# Performance Optimization (Bolt): Combined fallback & validation checks completely avoid redundant shell operations
+# on clean paths, yielding an expected speedup in title rendering.
+if [ -n "${CWD:-}" ]; then
   if [[ "$CWD" == "/google/src/cloud/"* ]]; then
     TEMP_CWD="${CWD#/google/src/cloud/}"
     if [[ "$TEMP_CWD" == *"/"* ]]; then
@@ -60,13 +55,11 @@ else
   WORKSPACE="unknown"
 fi
 
-# ─── Input Validation & Sanitization ─────────────────────────────────────────
-# Ensure variables are strictly validated and sanitized to prevent terminal/option injection.
-[[ "$STATE"      == *[!a-zA-Z0-9_-]* || -z "$STATE" ]] && STATE="idle"
-[[ "$WORKSPACE"  == *[!a-zA-Z0-9_./\ -]* || -z "$WORKSPACE" ]] && WORKSPACE="unknown"
-[[ "$SANDBOX"    != "true" && "$SANDBOX" != "false" ]] && SANDBOX="false"
-[[ "$VCS_BRANCH" == *[!a-zA-Z0-9_./-]* ]] && VCS_BRANCH=""
-[[ "$VCS_DIRTY"  != "true" && "$VCS_DIRTY" != "false" ]] && VCS_DIRTY="false"
+[[ -z "${STATE:-}"      || "$STATE"      == *[!a-zA-Z0-9_-]* ]] && STATE="idle"
+[[ -z "${WORKSPACE:-}"  || "$WORKSPACE"  == *[!a-zA-Z0-9_./\ -]* ]] && WORKSPACE="unknown"
+[[ "${SANDBOX:-}"    != "true" && "$SANDBOX" != "false" ]] && SANDBOX="false"
+[[ -z "${VCS_BRANCH:-}" || "$VCS_BRANCH" == *[!a-zA-Z0-9_./-]* ]] && VCS_BRANCH=""
+[[ "${VCS_DIRTY:-}"  != "true" && "$VCS_DIRTY" != "false" ]] && VCS_DIRTY="false"
 
 # Map state to emoji and polished label
 case "$STATE" in
