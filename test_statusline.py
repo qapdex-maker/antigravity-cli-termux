@@ -101,6 +101,32 @@ def main():
     assert "maintrue" in stdout_n, f"Expected null bytes to be stripped from branch name, got: {stdout_n}"
     print("✅ Test 5 Passed: Null byte injection and field misalignment mitigated in statusline.")
 
+    # 6. Test context window caution & critical alerts (multi-dimensional accessibility cues)
+    # High: >= 90% -> ⚠️
+    payload_high = payload.copy()
+    payload_high["context_window"] = {"used_percentage": 92.0}
+    stdout_high, _, code_high = run_statusline(payload_high, 80)
+    assert code_high == 0
+    assert "⚠️" in stdout_high, "Expected warning icon (⚠️) for high context usage (>= 90%)"
+    assert "⚡" not in stdout_high, "Unexpected caution icon (⚡) for high context usage (>= 90%)"
+
+    # Caution: 60% <= pct < 90% -> ⚡
+    payload_caution = payload.copy()
+    payload_caution["context_window"] = {"used_percentage": 75.0}
+    stdout_caution, _, code_caution = run_statusline(payload_caution, 80)
+    assert code_caution == 0
+    assert "⚡" in stdout_caution, "Expected caution icon (⚡) for moderate context usage (60%-90%)"
+    assert "⚠️" not in stdout_caution, "Unexpected warning icon (⚠️) for moderate context usage (60%-90%)"
+
+    # Normal: < 60% -> no emoji
+    payload_normal = payload.copy()
+    payload_normal["context_window"] = {"used_percentage": 45.0}
+    stdout_normal, _, code_normal = run_statusline(payload_normal, 80)
+    assert code_normal == 0
+    assert "⚠️" not in stdout_normal, "Unexpected warning icon (⚠️) for normal context usage (< 60%)"
+    assert "⚡" not in stdout_normal, "Unexpected caution icon (⚡) for normal context usage (< 60%)"
+    print("✅ 6. Multi-dimensional context window alerts/cues (⚠️ for >= 90%, ⚡ for 60-90%) verified.")
+
     print("All tests passed successfully!")
 
 if __name__ == '__main__':

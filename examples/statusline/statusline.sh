@@ -318,6 +318,8 @@ CTX_PCT_COLOR="${BAR_COLOR}${B}"
 CTX_WARNING=""
 if [ "$PCT_INT" -ge 90 ]; then
   CTX_WARNING=" ⚠️"
+elif [ "$PCT_INT" -ge 60 ]; then
+  CTX_WARNING=" ⚡"
 fi
 CTX="${FG_GRAY}📊 ctx ${BAR}${R} ${CTX_PCT_COLOR}${PCT_FMT}%${CTX_WARNING}${R}"
 
