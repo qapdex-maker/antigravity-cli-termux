@@ -88,6 +88,9 @@ ENV_TYPE="termux"
 TERMUX_PREFIX="$PREFIX"
 INSTALL_BIN_DIR="${TERMUX_PREFIX}/bin"
 
+# Performance Optimization (Bolt): Cache the output of uname -m to avoid duplicate external process spawns.
+ARCH=$(uname -m)
+
 # Security Enhancement (Sentinel): Create a secure randomized temporary directory (CWE-377, CWE-59)
 # with restricted 0700 permissions to mitigate local race conditions, symlink attacks, and predictable tmp files.
 SECURE_TMP_DIR=$(mktemp -d "${TERMUX_PREFIX}/tmp/antigravity-install.XXXXXX" 2>/dev/null || mktemp -d)
@@ -307,7 +310,7 @@ if { curl -fLs --connect-timeout 5 -m 10 -H "Cache-Control: no-cache" -- "https:
   # Performance Optimization (Bolt): Use highly efficient base-10 arithmetic expansion $((10#0$COLS))
   COLS=$((10#0$COLS))
 
-  awk -v cols="$COLS" -v arch="$(uname -m)" -v bold="${BOLD}${CYAN}" -v dim="${DIM}" -v grn="${GREEN}" -v rst="${RESET}" '
+  awk -v cols="$COLS" -v arch="$ARCH" -v bold="${BOLD}${CYAN}" -v dim="${DIM}" -v grn="${GREEN}" -v rst="${RESET}" '
   {
     sub(/\r$/, "");
 
@@ -345,7 +348,7 @@ echo ""
 divider
 
 # ── Environment check ─────────────────────────────────────────────────────────
-[[ "$(uname -m)" == "aarch64" ]] || die "Architecture must be aarch64"
+[[ "$ARCH" == "aarch64" ]] || die "Architecture must be aarch64"
 command -v curl >/dev/null 2>&1  || die "curl is required. Please install it using: pkg install curl"
 command -v awk  >/dev/null 2>&1  || die "awk is required. Please install it using: pkg install gawk"
 command -v tar  >/dev/null 2>&1  || die "tar is required. Please install it using: pkg install tar"

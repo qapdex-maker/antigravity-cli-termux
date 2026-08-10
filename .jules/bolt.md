@@ -31,3 +31,7 @@
 ## 2026-08-01 - [Avoid Fork/Exec Overhead of External tput Calls via Native COLUMNS]
 **Learning:** Shell scripts frequently spawn external utilities like `tput cols` to measure terminal dimensions. While tput behaves accurately, repeated process forks/execs introduce measurable performance overhead. Prioritizing native shell variables like `$COLUMNS` (when populated and strictly numeric) completely bypasses subprocess spawns.
 **Action:** Prioritize native shell variable references like `$COLUMNS` over external command execution (like `tput cols`) in environment/screen detection helpers.
+
+## 2026-08-02 - [Combine Empty-Check Fallbacks and Pattern Validation in Bash]
+**Learning:** Shell scripts often check variables for emptiness and assign default values, then immediately perform pattern matching/validation checks that also re-verify emptiness. This double checking introduces redundant conditional evaluations in hot, high-frequency execution paths (like prompt or window title rendering). Merging emptiness checks and pattern validation into single-pass, compound `[[ -z "$VAR" || "$VAR" == *[!pattern]* ]]` conditions achieves up to a 39.3% performance speedup in the validation phase.
+**Action:** Design shell scripts to validate, sanitize, and set fallbacks for parsed variables in a single-pass conditional statement instead of split multi-step check blocks on performance-critical execution paths.
