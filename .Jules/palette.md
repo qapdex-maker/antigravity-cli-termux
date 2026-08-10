@@ -53,3 +53,7 @@
 ## 2026-08-07 - Dynamic VCS Branch Truncation in Desktop Window Titles
 **Learning:** In constrained layout environments like desktop taskbars or terminal tab headers, extremely long Version Control System (VCS) branch names in window titles can easily overflow, pushing crucial status indicators (such as Sandbox ON/OFF) completely out of view. Truncating branch names that exceed 15 characters to a safe prefix and suffix using substring slicing (e.g., `feature-e...ame`) preserves visual layout robustness and keeps critical system safety status persistently visible.
 **Action:** Always truncate long branch names in window titles to a maximum of 15 characters to guarantee the visibility of subsequent critical indicators.
+
+## 2026-08-08 - Accessible Multi-Tiered Alert Indicators in CLI statuslines
+**Learning:** Color transitions (e.g., green to yellow to red) are invaluable, but color-blind or low-vision users require separate textual/emoji indicators to accurately assess warning tiers. Adding a distinct caution badge (⚡) for moderate context resource usage (60% to 90%) alongside the existing critical alert badge (⚠️, >= 90%) provides clear, multi-dimensional feedback that enhances scanning accessibility.
+**Action:** Always complement multi-tier semantic color transitions with corresponding, distinct visual icons/emojis in terminal displays.
