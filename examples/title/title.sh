@@ -14,7 +14,7 @@ set -euo pipefail
   read -d '' -r VCS_DIRTY || true
   read -d '' -r _ || true
 } < <(jq -j '
-  def safe(v): (v | tostring | gsub("\u0000"; ""));
+  def safe(v): (v | tostring | split("\u0000") | join(""));
   safe(.agent_state // "idle"), "\u0000",
   safe(.workspace.current_dir // ""), "\u0000",
   safe(.sandbox.enabled // false), "\u0000",

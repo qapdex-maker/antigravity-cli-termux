@@ -47,7 +47,7 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
   read -d '' -r COLS || true
   read -d '' -r _ || true
 } < <(jq -j '
-  def safe(v): (v | tostring | gsub("\u0000"; ""));
+  def safe(v): (v | tostring | split("\u0000") | join(""));
   safe(.agent_state // "idle"), "\u0000",
   safe(.context_window.used_percentage // 0), "\u0000",
   safe(.vcs?.branch // ""), "\u0000",
@@ -215,52 +215,24 @@ else
   BAR_COLOR="$FG_BRIGHT_WHITE"
 fi
 
-# Build bar with partial-fill last block using locale-safe pre-defined segments to avoid multi-byte UTF-8 string slicing.
-# Performance Optimization (Bolt): Standard string slicing `${FULL_BAR:0:FILLED}` slices by bytes in non-UTF-8 locales (e.g., LC_ALL=C),
-# causing terminal corruption on multi-byte characters like █ (3 bytes) and · (2 bytes). Direct case-based assignment is
-# extremely fast, completely locale-independent, and eliminates all slicing and loop overhead.
+# Build bar with partial-fill last block using locale-safe ASCII placeholder slicing to avoid multi-byte UTF-8 string slicing.
+# Performance & Locale Optimization (Bolt): Standard string slicing `${FULL_BAR:0:FILLED}` slices by bytes in non-UTF-8 locales (e.g., LC_ALL=C),
+# causing terminal corruption on multi-byte characters like █ (3 bytes) and · (2 bytes). Slicing ASCII-only strings and then
+# translating to multi-byte UTF-8 completely avoids byte-slicing corruption and eliminates verbose case statements with high-speed parameter expansion.
+FULL_BAR_ASCII="###############"
+EMPTY_BAR_ASCII="---------------"
+
 if [ "$FILLED" -lt "$BAR_LEN" ]; then
-  EMPTY_LEN=$(( BAR_LEN - FILLED - 1 ))
+  EMPTY_LEN=0
+  if [ "$BAR_LEN" -gt "$FILLED" ]; then
+    EMPTY_LEN=$(( BAR_LEN - FILLED - 1 ))
+  fi
 
-  # Generate filled segment
-  case "$FILLED" in
-    0) F_BAR="" ;;
-    1) F_BAR="█" ;;
-    2) F_BAR="██" ;;
-    3) F_BAR="███" ;;
-    4) F_BAR="████" ;;
-    5) F_BAR="█████" ;;
-    6) F_BAR="██████" ;;
-    7) F_BAR="███████" ;;
-    8) F_BAR="████████" ;;
-    9) F_BAR="█████████" ;;
-    10) F_BAR="██████████" ;;
-    11) F_BAR="███████████" ;;
-    12) F_BAR="████████████" ;;
-    13) F_BAR="█████████████" ;;
-    14) F_BAR="██████████████" ;;
-    *) F_BAR="███████████████" ;;
-  esac
+  F_BAR_ASCII="${FULL_BAR_ASCII:0:FILLED}"
+  E_BAR_ASCII="${EMPTY_BAR_ASCII:0:EMPTY_LEN}"
 
-  # Generate empty segment
-  case "$EMPTY_LEN" in
-    0) E_BAR="" ;;
-    1) E_BAR="·" ;;
-    2) E_BAR="··" ;;
-    3) E_BAR="···" ;;
-    4) E_BAR="····" ;;
-    5) E_BAR="·····" ;;
-    6) E_BAR="······" ;;
-    7) E_BAR="·······" ;;
-    8) E_BAR="········" ;;
-    9) E_BAR="·········" ;;
-    10) E_BAR="··········" ;;
-    11) E_BAR="···········" ;;
-    12) E_BAR="············" ;;
-    13) E_BAR="·············" ;;
-    14) E_BAR="··············" ;;
-    *) E_BAR="···············" ;;
-  esac
+  F_BAR="${F_BAR_ASCII//#/█}"
+  E_BAR="${E_BAR_ASCII//-/·}"
 
   # Contrast-enhanced progress bar coloring:
   # The filled portion and partially filled character are colored with BAR_COLOR.
@@ -280,24 +252,8 @@ if [ "$FILLED" -lt "$BAR_LEN" ]; then
   fi
 else
   # Generate full bar of length BAR_LEN
-  case "$BAR_LEN" in
-    0) BAR="" ;;
-    1) BAR="█" ;;
-    2) BAR="██" ;;
-    3) BAR="███" ;;
-    4) BAR="████" ;;
-    5) BAR="█████" ;;
-    6) BAR="██████" ;;
-    7) BAR="███████" ;;
-    8) BAR="████████" ;;
-    9) BAR="█████████" ;;
-    10) BAR="██████████" ;;
-    11) BAR="███████████" ;;
-    12) BAR="████████████" ;;
-    13) BAR="█████████████" ;;
-    14) BAR="██████████████" ;;
-    *) BAR="███████████████" ;;
-  esac
+  F_BAR_ASCII="${FULL_BAR_ASCII:0:BAR_LEN}"
+  BAR="${F_BAR_ASCII//#/█}"
   BAR="${BAR_COLOR}${BAR}"
 fi
 
