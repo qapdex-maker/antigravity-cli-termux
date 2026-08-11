@@ -447,11 +447,37 @@ printf '\n'
 case ":$PATH:" in
   *":$INSTALL_BIN_DIR:"*) ;;
   *)
-    cat >&2 <<EOF
-⚠️  ${RED}${BOLD}Warning:${RESET} ${BOLD}$INSTALL_BIN_DIR${RESET} is not in PATH for this shell.
-Please add this to your shell profile (e.g., ~/.bashrc or ~/.zshrc):
+    ACTIVE_SHELL="${SHELL##*/}"
+    [ -z "$ACTIVE_SHELL" ] && ACTIVE_SHELL="bash"
 
-  export PATH="$INSTALL_BIN_DIR:\$PATH"
+    case "$ACTIVE_SHELL" in
+      zsh)
+        SHELL_RC="~/.zshrc"
+        APPEND_CMD="export PATH=\"$INSTALL_BIN_DIR:\$PATH\""
+        RELOAD_CMD="source ~/.zshrc"
+        ;;
+      fish)
+        SHELL_RC="~/.config/fish/config.fish"
+        APPEND_CMD="fish_add_path \"$INSTALL_BIN_DIR\""
+        RELOAD_CMD="source ~/.config/fish/config.fish"
+        ;;
+      *)
+        SHELL_RC="~/.bashrc"
+        APPEND_CMD="export PATH=\"$INSTALL_BIN_DIR:\$PATH\""
+        RELOAD_CMD="source ~/.bashrc"
+        ;;
+    esac
+
+    cat >&2 <<EOF
+⚠️  ${RED}${BOLD}Warning:${RESET} ${BOLD}$INSTALL_BIN_DIR${RESET} is not in PATH for your active shell (${ACTIVE_SHELL}).
+
+To add it permanently, append it to your shell profile by running:
+
+  ${CYAN}echo '${APPEND_CMD}' >> ${SHELL_RC}${RESET}
+
+Then reload your shell configuration:
+
+  ${CYAN}${RELOAD_CMD}${RESET}
 
 EOF
     ;;

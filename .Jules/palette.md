@@ -57,3 +57,7 @@
 ## 2026-08-08 - Accessible Multi-Tiered Alert Indicators in CLI statuslines
 **Learning:** Color transitions (e.g., green to yellow to red) are invaluable, but color-blind or low-vision users require separate textual/emoji indicators to accurately assess warning tiers. Adding a distinct caution badge (⚡) for moderate context resource usage (60% to 90%) alongside the existing critical alert badge (⚠️, >= 90%) provides clear, multi-dimensional feedback that enhances scanning accessibility.
 **Action:** Always complement multi-tier semantic color transitions with corresponding, distinct visual icons/emojis in terminal displays.
+
+## 2026-08-09 - Shell-Specific Interactive Alert Adaptation in CLI Installers
+**Learning:** Providing generic installation warning paths or instructions for environment/PATH modifications induces unnecessary cognitive burden, potentially causing users to enter wrong configuration paths. Tailoring PATH append directives dynamically based on the active user shell (e.g. bash, zsh, or fish) eliminates friction and ensures immediate, copy-pasteable correctness.
+**Action:** Detect the active login shell dynamically and provide context-aware, customized configuration/append/reload instructions within terminal host environments.
