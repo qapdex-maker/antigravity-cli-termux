@@ -61,3 +61,11 @@
 ## 2026-08-09 - Shell-Specific Interactive Alert Adaptation in CLI Installers
 **Learning:** Providing generic installation warning paths or instructions for environment/PATH modifications induces unnecessary cognitive burden, potentially causing users to enter wrong configuration paths. Tailoring PATH append directives dynamically based on the active user shell (e.g. bash, zsh, or fish) eliminates friction and ensures immediate, copy-pasteable correctness.
 **Action:** Detect the active login shell dynamically and provide context-aware, customized configuration/append/reload instructions within terminal host environments.
+
+## 2026-08-10 - Reassurance of Existing Path Settings in Installer Pipelines
+**Learning:** When installer scripts (like `install.sh`) detect that the user's environment is already correctly configured (such as having the installation directory already in `$PATH`), outputting an explicit reassuring status/confirmation message rather than silently skipping prevents user confusion and confirms a successful state.
+**Action:** Always provide reassuring, positive validation feedback when clean-path checks verify that the user's setup or system variables are already perfectly configured.
+
+## 2026-08-11 - Balanced Offline Fallback Visual Layouts
+**Learning:** Ensuring layout and metadata parity in fallback UI elements—such as rendering structured target, architecture, and offline-status tables in `install.sh` when a remote visual logo fails to load—maintains a professional and cohesive user experience regardless of network connectivity.
+**Action:** Design offline fallback rendering blocks with structural parity, reproducing identical metadata alignments and styling indicators as online versions.
