@@ -5,6 +5,9 @@ set -euo pipefail
 # Performance Optimization (Bolt): stream stdin directly to jq to avoid spawning an external cat process and copying buffers.
 # We append a sentinel "END" field to ensure the read block never fails on empty/missing trailing fields.
 # We also use tr -d '\r' to strip carriage returns to prevent CRLF/terminal injection.
+# Security/Performance Optimization (Bolt): Stripping both null-bytes and carriage returns (\r) directly inside
+# the single-pass jq filter avoids the overhead of executing separate Bash string replacements for 5 variables
+# in high-frequency title rendering.
 # Security Enhancement (Sentinel): Transitioning to null delimiters avoids field misalignment on embedded newlines.
 {
   read -d '' -r STATE || true
@@ -14,7 +17,7 @@ set -euo pipefail
   read -d '' -r VCS_DIRTY || true
   read -d '' -r _ || true
 } < <(jq -j '
-  def safe(v): (v | tostring | split("\u0000") | join(""));
+  def safe(v): (v | tostring | split("\u0000") | join("") | split("\r") | join(""));
   safe(.agent_state // "idle"), "\u0000",
   safe(.workspace.current_dir // ""), "\u0000",
   safe(.sandbox.enabled // false), "\u0000",
@@ -22,14 +25,6 @@ set -euo pipefail
   safe(.vcs?.dirty // false), "\u0000",
   "END\u0000"
 ' 2>/dev/null)
-
-# Performance Optimization (Bolt): Pure Bash parameter expansion ${VAR//$'\r'/} replaces
-# the external process pipeline | tr -d '\r', removing process spawn overhead in high-frequency title rendering.
-STATE="${STATE//$'\r'/}"
-CWD="${CWD//$'\r'/}"
-SANDBOX="${SANDBOX//$'\r'/}"
-VCS_BRANCH="${VCS_BRANCH//$'\r'/}"
-VCS_DIRTY="${VCS_DIRTY//$'\r'/}"
 
 # ─── Workspace Extraction, Input Validation, Sanitization & Fallbacks ───────
 # Ensure variables are strictly validated, sanitized, and set to default fallbacks in a single pass.
