@@ -11,6 +11,7 @@ set -euo pipefail
 # Security Enhancement (Sentinel): Transitioning to null delimiters avoids field misalignment on embedded newlines.
 {
   read -d '' -r STATE || true
+  read -d '' -r FALLBACK_LABEL || true
   read -d '' -r CWD || true
   read -d '' -r SANDBOX || true
   read -d '' -r VCS_BRANCH || true
@@ -18,7 +19,9 @@ set -euo pipefail
   read -d '' -r _ || true
 } < <(jq -j '
   def safe(v): (v | tostring | split("\u0000") | join("") | split("\r") | join(""));
+  def titlecase: (tostring | split("_") | join(" ") | (.[0:1] | ascii_upcase) + .[1:]);
   safe(.agent_state // "idle"), "\u0000",
+  safe(.agent_state // "idle" | titlecase), "\u0000",
   safe(.workspace.current_dir // ""), "\u0000",
   safe(.sandbox.enabled // false), "\u0000",
   safe(.vcs?.branch // ""), "\u0000",
@@ -51,6 +54,7 @@ else
 fi
 
 [[ -z "${STATE:-}"      || "$STATE"      == *[!a-zA-Z0-9_-]* ]] && STATE="idle"
+[[ -z "${FALLBACK_LABEL:-}" || "$FALLBACK_LABEL" == *[!a-zA-Z0-9_\ -]* ]] && FALLBACK_LABEL="Idle"
 [[ -z "${WORKSPACE:-}"  || "$WORKSPACE"  == *[!a-zA-Z0-9_./\ -]* ]] && WORKSPACE="unknown"
 [[ "${SANDBOX:-}"    != "true" && "$SANDBOX" != "false" ]] && SANDBOX="false"
 [[ -z "${VCS_BRANCH:-}" || "$VCS_BRANCH" == *[!a-zA-Z0-9_./-]* ]] && VCS_BRANCH=""
@@ -71,21 +75,7 @@ case "$STATE" in
   stopped|interrupted) EMOJI="🛑"; LABEL="Stopped" ;;
   aborted)           EMOJI="🛑"; LABEL="Aborted" ;;
   *)            EMOJI="🤖"
-                # Fallback mapping: convert underscore to space, and capitalize first letter
-                # without spawning subshells or using Bash 4+ specific parameters
-                TEMP_STATE="${STATE//_/ }"
-                FIRST_CHAR="${TEMP_STATE:0:1}"
-                REST_CHARS="${TEMP_STATE:1}"
-                case "$FIRST_CHAR" in
-                  a) FIRST_CHAR="A" ;; b) FIRST_CHAR="B" ;; c) FIRST_CHAR="C" ;; d) FIRST_CHAR="D" ;;
-                  e) FIRST_CHAR="E" ;; f) FIRST_CHAR="F" ;; g) FIRST_CHAR="G" ;; h) FIRST_CHAR="H" ;;
-                  i) FIRST_CHAR="I" ;; j) FIRST_CHAR="J" ;; k) FIRST_CHAR="K" ;; l) FIRST_CHAR="L" ;;
-                  m) FIRST_CHAR="M" ;; n) FIRST_CHAR="N" ;; o) FIRST_CHAR="O" ;; p) FIRST_CHAR="P" ;;
-                  q) FIRST_CHAR="Q" ;; r) FIRST_CHAR="R" ;; s) FIRST_CHAR="S" ;; t) FIRST_CHAR="T" ;;
-                  u) FIRST_CHAR="U" ;; v) FIRST_CHAR="V" ;; w) FIRST_CHAR="W" ;; x) FIRST_CHAR="X" ;;
-                  y) FIRST_CHAR="Y" ;; z) FIRST_CHAR="Z" ;;
-                esac
-                LABEL="${FIRST_CHAR}${REST_CHARS}"
+                LABEL="$FALLBACK_LABEL"
                 ;;
 esac
 
