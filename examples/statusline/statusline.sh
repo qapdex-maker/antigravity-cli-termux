@@ -33,6 +33,9 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
 # Extract all fields in one pass to prevent spawning jq 8 times.
 # We append a sentinel "END" field to ensure the read block never fails on empty/missing trailing fields.
 # We also use tr -d '\r' to strip carriage returns to prevent CRLF/terminal injection.
+# Security/Performance Optimization (Bolt): Stripping both null-bytes and carriage returns (\r) directly inside
+# the single-pass jq filter avoids the overhead of executing separate Bash string replacements for 10 variables
+# in high-frequency statusline rendering.
 # Security Enhancement (Sentinel): Transitioning to null delimiters avoids field misalignment on embedded newlines.
 {
   read -d '' -r STATE || true
@@ -47,7 +50,7 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
   read -d '' -r COLS || true
   read -d '' -r _ || true
 } < <(jq -j '
-  def safe(v): (v | tostring | split("\u0000") | join(""));
+  def safe(v): (v | tostring | split("\u0000") | join("") | split("\r") | join(""));
   safe(.agent_state // "idle"), "\u0000",
   safe(.context_window.used_percentage // 0), "\u0000",
   safe(.vcs?.branch // ""), "\u0000",
@@ -60,19 +63,6 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
   safe(.terminal_width // 80), "\u0000",
   "END\u0000"
 ' 2>/dev/null)
-
-# Performance Optimization (Bolt): Pure Bash parameter expansion ${VAR//$'\r'/} replaces
-# the external process pipeline | tr -d '\r', removing process spawn overhead in high-frequency statusline rendering.
-STATE="${STATE//$'\r'/}"
-USED_PCT="${USED_PCT//$'\r'/}"
-VCS_BRANCH="${VCS_BRANCH//$'\r'/}"
-VCS_DIRTY="${VCS_DIRTY//$'\r'/}"
-SANDBOX="${SANDBOX//$'\r'/}"
-ARTIFACTS="${ARTIFACTS//$'\r'/}"
-SUBAGENTS="${SUBAGENTS//$'\r'/}"
-BG_TASKS="${BG_TASKS//$'\r'/}"
-MODEL="${MODEL//$'\r'/}"
-COLS="${COLS//$'\r'/}"
 
 # ─── Input Validation, Sanitization & Fallbacks ──────────────────────────────
 # Ensure variables are strictly validated, sanitized, and set to default fallbacks in a single pass.
