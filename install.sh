@@ -351,6 +351,10 @@ if { curl --cacert "$CA_BUNDLE" -fLs --connect-timeout 5 -m 10 -H "Cache-Control
 else
   printf "  %sAntigravity Termux%s\n" "${BOLD}${CYAN}" "${RESET}"
   printf "  %sStandalone Installer%s\n" "${DIM}" "${RESET}"
+  printf "  %s────────────────────%s\n" "${DIM}" "${RESET}"
+  printf "  %sTarget:%s  Termux\n" "${DIM}" "${RESET}"
+  printf "  %sArch:%s    %s\n" "${DIM}" "${RESET}" "${ARCH}"
+  printf "  %sStatus:%s  %sOffline%s\n" "${DIM}" "${RESET}" "${RED}" "${RESET}"
 fi
 echo ""
 divider
@@ -445,7 +449,9 @@ info "${BOLD}cd $(dirname "$TMP") && gh attestation verify antigravity-termux-st
 printf '\n'
 
 case ":$PATH:" in
-  *":$INSTALL_BIN_DIR:"*) ;;
+  *":$INSTALL_BIN_DIR:"*)
+    info "Environment: PATH is already configured correctly."
+    ;;
   *)
     ACTIVE_SHELL="${SHELL##*/}"
     [ -z "$ACTIVE_SHELL" ] && ACTIVE_SHELL="bash"
