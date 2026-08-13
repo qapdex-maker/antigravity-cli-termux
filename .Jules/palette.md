@@ -69,3 +69,7 @@
 ## 2026-08-11 - Balanced Offline Fallback Visual Layouts
 **Learning:** Ensuring layout and metadata parity in fallback UI elements—such as rendering structured target, architecture, and offline-status tables in `install.sh` when a remote visual logo fails to load—maintains a professional and cohesive user experience regardless of network connectivity.
 **Action:** Design offline fallback rendering blocks with structural parity, reproducing identical metadata alignments and styling indicators as online versions.
+
+## 2026-08-12 - Accessible Visual Enhancements for Installer Progress Bars
+**Learning:** In terminal installer progress bars, coloring only the active/filled segment with progress/alert color (e.g., cyan) and the empty/inactive segments with dim gray provides high visual contrast and accessibility. Furthermore, coloring the entire completed progress bar green upon successful completion provides a highly reassuring, cohesive visual cue confirming a successful setup.
+**Action:** Always color empty progress segments with a dimmed inactive color while utilizing bright accent/semantic colors only for active metrics, and render the completed bar green upon success.

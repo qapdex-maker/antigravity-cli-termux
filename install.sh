@@ -259,9 +259,11 @@ download_with_progress() {
     local pct=$(( total_size > 0 ? current_size * 100 / total_size : 0 ))
     (( pct > 100 )) && pct=100
     local filled=$(( pct * w / 100 ))
-    local bar_ascii="${full_bar_ascii:0:filled}${empty_bar_ascii:0:w-filled}"
-    local bar="${bar_ascii//#/█}"
-    bar="${bar//-/░}"
+    local filled_bar_ascii="${full_bar_ascii:0:filled}"
+    local empty_bar_ascii_sub="${empty_bar_ascii:0:w-filled}"
+    local filled_bar="${filled_bar_ascii//#/█}"
+    local empty_bar="${empty_bar_ascii_sub//-/░}"
+    local bar="${CYAN}${filled_bar}${DIM}${empty_bar}${RESET}"
 
     local c_mb_i=$(( current_size / 1048576 ))
     local c_mb_d=$(( (current_size * 10 / 1048576) % 10 ))
@@ -279,6 +281,7 @@ download_with_progress() {
   if [ $exit_status -eq 0 ]; then
     local bar_ascii="${full_bar_ascii:0:w}"
     local bar="${bar_ascii//#/█}"
+    local bar="${GREEN}${bar}${RESET}"
     local t_mb_i=$(( total_size / 1048576 ))
     local t_mb_d=$(( (total_size * 10 / 1048576) % 10 ))
     printf "\r\033[K ✅ %s[OK]%s [%s] 100%% %s%5d.%dM / %4d.%dM%s\n" \
