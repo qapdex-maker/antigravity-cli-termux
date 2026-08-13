@@ -39,6 +39,7 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
 # Security Enhancement (Sentinel): Transitioning to null delimiters avoids field misalignment on embedded newlines.
 {
   read -d '' -r STATE || true
+  read -d '' -r UPPER_STATE || true
   read -d '' -r USED_PCT || true
   read -d '' -r VCS_BRANCH || true
   read -d '' -r VCS_DIRTY || true
@@ -52,6 +53,7 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
 } < <(jq -j '
   def safe(v): (v | tostring | split("\u0000") | join("") | split("\r") | join(""));
   safe(.agent_state // "idle"), "\u0000",
+  safe(.agent_state // "idle" | ascii_upcase), "\u0000",
   safe(.context_window.used_percentage // 0), "\u0000",
   safe(.vcs?.branch // ""), "\u0000",
   safe(.vcs?.dirty // false), "\u0000",
@@ -73,6 +75,7 @@ if [[ -z "$USED_PCT" || "$USED_PCT" == *[!0-9.]* || "$USED_PCT" == *.*.* || "$US
 fi
 
 [[ -z "$STATE"      || "$STATE"      == *[!a-zA-Z0-9_-]* ]] && STATE="idle"
+[[ -z "$UPPER_STATE" || "$UPPER_STATE" == *[!a-zA-Z0-9_-]* ]] && UPPER_STATE="IDLE"
 [[ -z "$VCS_BRANCH" || "$VCS_BRANCH" == *[!a-zA-Z0-9_./-]* ]] && VCS_BRANCH=""
 [[ "$VCS_DIRTY"  != "true" && "$VCS_DIRTY" != "false" ]] && VCS_DIRTY="false"
 [[ "$SANDBOX"    != "true" && "$SANDBOX" != "false" ]] && SANDBOX="false"
@@ -113,36 +116,7 @@ case "$STATE" in
   cancelled)         S="${FG_BRIGHT_RED}${B}🛑 CANCELLED${R}" ;;
   stopped|interrupted) S="${FG_BRIGHT_RED}${B}🛑 STOPPED${R}" ;;
   aborted)           S="${FG_BRIGHT_RED}${B}🛑 ABORTED${R}" ;;
-  *)            # Performance Optimization (Bolt): Pure Bash transliteration to uppercase avoids fork/exec overhead.
-                # Avoids `${STATE^^}` for compatibility with older Bash versions (like Bash 3.2 on macOS).
-                UPPER_STATE="$STATE"
-                UPPER_STATE=${UPPER_STATE//a/A}
-                UPPER_STATE=${UPPER_STATE//b/B}
-                UPPER_STATE=${UPPER_STATE//c/C}
-                UPPER_STATE=${UPPER_STATE//d/D}
-                UPPER_STATE=${UPPER_STATE//e/E}
-                UPPER_STATE=${UPPER_STATE//f/F}
-                UPPER_STATE=${UPPER_STATE//g/G}
-                UPPER_STATE=${UPPER_STATE//h/H}
-                UPPER_STATE=${UPPER_STATE//i/I}
-                UPPER_STATE=${UPPER_STATE//j/J}
-                UPPER_STATE=${UPPER_STATE//k/K}
-                UPPER_STATE=${UPPER_STATE//l/L}
-                UPPER_STATE=${UPPER_STATE//m/M}
-                UPPER_STATE=${UPPER_STATE//n/N}
-                UPPER_STATE=${UPPER_STATE//o/O}
-                UPPER_STATE=${UPPER_STATE//p/P}
-                UPPER_STATE=${UPPER_STATE//q/Q}
-                UPPER_STATE=${UPPER_STATE//r/R}
-                UPPER_STATE=${UPPER_STATE//s/S}
-                UPPER_STATE=${UPPER_STATE//t/T}
-                UPPER_STATE=${UPPER_STATE//u/U}
-                UPPER_STATE=${UPPER_STATE//v/V}
-                UPPER_STATE=${UPPER_STATE//w/W}
-                UPPER_STATE=${UPPER_STATE//x/X}
-                UPPER_STATE=${UPPER_STATE//y/Y}
-                UPPER_STATE=${UPPER_STATE//z/Z}
-                S="${FG_WHITE}${B}⏳ ${UPPER_STATE}${R}" ;;
+  *)            S="${FG_WHITE}${B}⏳ ${UPPER_STATE}${R}" ;;
 esac
 
 # ─── VCS Branch ──────────────────────────────────────────────────────────────
