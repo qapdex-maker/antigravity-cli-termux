@@ -126,7 +126,8 @@ def main():
         "agent_state": "idle",
         "workspace": "corrupted_string",
         "sandbox": "corrupted_string",
-        "vcs": "corrupted_string"
+        "vcs": "corrupted_string",
+        "model": "corrupted_string"
     }
     stdout_corr, stderr_corr, code_corr = run_title(payload_corrupted)
     assert code_corr == 0, f"Error: {stderr_corr}"
@@ -134,6 +135,46 @@ def main():
     assert "🔓 Sandbox OFF" in title_corr, f"Expected sandbox status to safely fallback to OFF, got: {title_corr}"
     assert "unknown" in title_corr, f"Expected workspace to safely fallback to unknown, got: {title_corr}"
     print("✅ Test 8 Passed: Corrupted nested fields successfully bypassed and handled safely in title.")
+
+    # Test 9: Active model integration (Standard model name)
+    payload9 = {
+        "agent_state": "idle",
+        "workspace": {"current_dir": "/home/user/project"},
+        "sandbox": {"enabled": True},
+        "model": {"display_name": "claude-3-5"}
+    }
+    stdout9, stderr9, code9 = run_title(payload9)
+    assert code9 == 0, f"Error: {stderr9}"
+    title9 = stdout9.strip()
+    assert "🟢 Idle | project (🧠 claude-3-5) (🔒 Sandbox ON)" in title9, f"Expected standard model display, got: {title9}"
+    print("✅ Test 9 Passed: Standard active model displays correctly.")
+
+    # Test 10: Active model integration (Long model name truncation)
+    payload10 = {
+        "agent_state": "idle",
+        "workspace": {"current_dir": "/home/user/project"},
+        "sandbox": {"enabled": True},
+        "model": {"display_name": "gemini-1.5-pro-preview-08"}
+    }
+    stdout10, stderr10, code10 = run_title(payload10)
+    assert code10 == 0, f"Error: {stderr10}"
+    title10 = stdout10.strip()
+    assert "gemini-1.5-pro-preview-08" not in title10, "Expected full long model to be truncated"
+    assert "gemini-1....-08" in title10, f"Expected truncated model name gemini-1....-08, got: {title10}"
+    print("✅ Test 10 Passed: Long active model name truncated correctly.")
+
+    # Test 11: Active model integration (Malicious/unsafe model name sanitization and fallback)
+    payload11 = {
+        "agent_state": "idle",
+        "workspace": {"current_dir": "/home/user/project"},
+        "sandbox": {"enabled": True},
+        "model": {"display_name": "gemini;rm -rf /"}
+    }
+    stdout11, stderr11, code11 = run_title(payload11)
+    assert code11 == 0, f"Error: {stderr11}"
+    title11 = stdout11.strip()
+    assert "gemini;rm" not in title11, "Expected malicious model name to be sanitized and ignored"
+    print("✅ Test 11 Passed: Malicious active model name sanitized and ignored successfully.")
 
     print("All title.sh tests passed successfully!")
 

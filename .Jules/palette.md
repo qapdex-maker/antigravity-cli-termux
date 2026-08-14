@@ -73,3 +73,7 @@
 ## 2026-08-12 - Accessible Visual Enhancements for Installer Progress Bars
 **Learning:** In terminal installer progress bars, coloring only the active/filled segment with progress/alert color (e.g., cyan) and the empty/inactive segments with dim gray provides high visual contrast and accessibility. Furthermore, coloring the entire completed progress bar green upon successful completion provides a highly reassuring, cohesive visual cue confirming a successful setup.
 **Action:** Always color empty progress segments with a dimmed inactive color while utilizing bright accent/semantic colors only for active metrics, and render the completed bar green upon success.
+
+## 2026-08-13 - Visual Parity & Safe Dynamic Model Display in CLI Window Titles
+**Learning:** Rendering the active AI model name (e.g. `(🧠 claude-3-5)`) directly in the terminal window/tab title provides immediate session context without requiring prompt line queries. To prevent title bar overflow in layout-constrained taskbars, model names must be truncated consistently with branch names (e.g., prefix and suffix truncation).
+**Action:** Always append safe-navigated and sanitized active model badges in CLI window titles, utilizing substring slicing to truncate labels that exceed 15 characters.
