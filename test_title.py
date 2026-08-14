@@ -121,6 +121,20 @@ def main():
 
     print("✅ Test 7 Passed: VCS branch name (> 15 chars) truncated correctly (clean & dirty).")
 
+    # Test 8: Non-object safety check (Crashes avoidance for corrupted nested objects)
+    payload_corrupted = {
+        "agent_state": "idle",
+        "workspace": "corrupted_string",
+        "sandbox": "corrupted_string",
+        "vcs": "corrupted_string"
+    }
+    stdout_corr, stderr_corr, code_corr = run_title(payload_corrupted)
+    assert code_corr == 0, f"Error: {stderr_corr}"
+    title_corr = stdout_corr.strip()
+    assert "🔓 Sandbox OFF" in title_corr, f"Expected sandbox status to safely fallback to OFF, got: {title_corr}"
+    assert "unknown" in title_corr, f"Expected workspace to safely fallback to unknown, got: {title_corr}"
+    print("✅ Test 8 Passed: Corrupted nested fields successfully bypassed and handled safely in title.")
+
     print("All title.sh tests passed successfully!")
 
 if __name__ == '__main__':

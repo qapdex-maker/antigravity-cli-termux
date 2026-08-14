@@ -127,6 +127,17 @@ def main():
     assert "⚡" not in stdout_normal, "Unexpected caution icon (⚡) for normal context usage (< 60%)"
     print("✅ 6. Multi-dimensional context window alerts/cues (⚠️ for >= 90%, ⚡ for 60-90%) verified.")
 
+    # 7. Non-object safety check (Crashes avoidance for corrupted nested objects)
+    payload_corrupted = payload.copy()
+    payload_corrupted["context_window"] = "corrupted_string"
+    payload_corrupted["vcs"] = "corrupted_string"
+    payload_corrupted["sandbox"] = "corrupted_string"
+    payload_corrupted["model"] = "corrupted_string"
+    stdout_corr, stderr_corr, code_corr = run_statusline(payload_corrupted, 80)
+    assert code_corr == 0, f"Error: {stderr_corr}"
+    assert "🔓 OFF" in stdout_corr, f"Expected sandbox status to safely fallback, got: {stdout_corr}"
+    print("✅ 7. Corrupted nested fields successfully bypassed and handled safely in statusline.")
+
     print("All tests passed successfully!")
 
 if __name__ == '__main__':

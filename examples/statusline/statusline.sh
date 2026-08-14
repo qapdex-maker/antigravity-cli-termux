@@ -52,16 +52,17 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
   read -d '' -r _ || true
 } < <(jq -j '
   def safe(v): (v | tostring | split("\u0000") | join("") | split("\r") | join(""));
+  def safe_nested(parent_key; child_key): if (.[parent_key] | type) == "object" then .[parent_key][child_key] else null end;
   safe(.agent_state // "idle"), "\u0000",
   safe(.agent_state // "idle" | ascii_upcase), "\u0000",
-  safe(.context_window.used_percentage // 0), "\u0000",
-  safe(.vcs?.branch // ""), "\u0000",
-  safe(.vcs?.dirty // false), "\u0000",
-  safe(.sandbox.enabled // false), "\u0000",
+  safe(safe_nested("context_window"; "used_percentage") // 0), "\u0000",
+  safe(safe_nested("vcs"; "branch") // ""), "\u0000",
+  safe(safe_nested("vcs"; "dirty") // false), "\u0000",
+  safe(safe_nested("sandbox"; "enabled") // false), "\u0000",
   safe(.artifact_count // 0), "\u0000",
   safe(if .subagents | type == "array" then (.subagents | length) else 0 end), "\u0000",
   safe(.task_count // 0), "\u0000",
-  safe(.model.display_name // ""), "\u0000",
+  safe(safe_nested("model"; "display_name") // ""), "\u0000",
   safe(.terminal_width // 80), "\u0000",
   "END\u0000"
 ' 2>/dev/null)

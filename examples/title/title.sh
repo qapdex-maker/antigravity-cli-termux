@@ -20,12 +20,13 @@ set -euo pipefail
 } < <(jq -j '
   def safe(v): (v | tostring | split("\u0000") | join("") | split("\r") | join(""));
   def titlecase: (tostring | split("_") | join(" ") | (.[0:1] | ascii_upcase) + .[1:]);
+  def safe_nested(parent_key; child_key): if (.[parent_key] | type) == "object" then .[parent_key][child_key] else null end;
   safe(.agent_state // "idle"), "\u0000",
   safe(.agent_state // "idle" | titlecase), "\u0000",
-  safe(.workspace.current_dir // ""), "\u0000",
-  safe(.sandbox.enabled // false), "\u0000",
-  safe(.vcs?.branch // ""), "\u0000",
-  safe(.vcs?.dirty // false), "\u0000",
+  safe(safe_nested("workspace"; "current_dir") // ""), "\u0000",
+  safe(safe_nested("sandbox"; "enabled") // false), "\u0000",
+  safe(safe_nested("vcs"; "branch") // ""), "\u0000",
+  safe(safe_nested("vcs"; "dirty") // false), "\u0000",
   "END\u0000"
 ' 2>/dev/null)
 
