@@ -16,6 +16,7 @@ set -euo pipefail
   read -d '' -r SANDBOX || true
   read -d '' -r VCS_BRANCH || true
   read -d '' -r VCS_DIRTY || true
+  read -d '' -r MODEL || true
   read -d '' -r _ || true
 } < <(jq -j '
   def safe(v): (v | tostring | split("\u0000") | join("") | split("\r") | join(""));
@@ -27,6 +28,7 @@ set -euo pipefail
   safe(safe_nested("sandbox"; "enabled") // false), "\u0000",
   safe(safe_nested("vcs"; "branch") // ""), "\u0000",
   safe(safe_nested("vcs"; "dirty") // false), "\u0000",
+  safe(safe_nested("model"; "display_name") // ""), "\u0000",
   "END\u0000"
 ' 2>/dev/null)
 
@@ -60,6 +62,7 @@ fi
 [[ "${SANDBOX:-}"    != "true" && "$SANDBOX" != "false" ]] && SANDBOX="false"
 [[ -z "${VCS_BRANCH:-}" || "$VCS_BRANCH" == *[!a-zA-Z0-9_./-]* ]] && VCS_BRANCH=""
 [[ "${VCS_DIRTY:-}"  != "true" && "$VCS_DIRTY" != "false" ]] && VCS_DIRTY="false"
+[[ -z "${MODEL:-}"      || "$MODEL"      == *[!a-zA-Z0-9_./\ -]* ]] && MODEL=""
 
 # Map state to emoji and polished label
 case "$STATE" in
@@ -81,6 +84,15 @@ case "$STATE" in
 esac
 
 # Build multi-dimensional branch text badge and safety visual cue since color is not supported in typical window titles
+M_TXT=""
+if [ -n "$MODEL" ]; then
+  DISPLAY_MODEL="$MODEL"
+  if [ "${#MODEL}" -gt 15 ]; then
+    DISPLAY_MODEL="${MODEL:0:9}...${MODEL: -3}"
+  fi
+  M_TXT=" (🧠 ${DISPLAY_MODEL})"
+fi
+
 VCS_TXT=""
 if [ -n "$VCS_BRANCH" ]; then
   DISPLAY_BRANCH="$VCS_BRANCH"
@@ -101,7 +113,7 @@ else
   SB_TXT=" (🔓 Sandbox OFF)"
 fi
 
-TITLE="$EMOJI $LABEL | $WORKSPACE$VCS_TXT$SB_TXT"
+TITLE="$EMOJI $LABEL | $WORKSPACE$M_TXT$VCS_TXT$SB_TXT"
 
 # Print title safely to avoid option injection
 printf "%s\n" "$TITLE"
