@@ -22,10 +22,10 @@ set -euo pipefail
   def titlecase: (tostring | split("_") | join(" ") | (.[0:1] | ascii_upcase) + .[1:]);
   safe(.agent_state // "idle"), "\u0000",
   safe(.agent_state // "idle" | titlecase), "\u0000",
-  safe(.workspace.current_dir // ""), "\u0000",
-  safe(.sandbox.enabled // false), "\u0000",
-  safe(.vcs?.branch // ""), "\u0000",
-  safe(.vcs?.dirty // false), "\u0000",
+  safe(if (.workspace | type) == "object" then .workspace.current_dir else null end // ""), "\u0000",
+  safe(if (.sandbox | type) == "object" then .sandbox.enabled else null end // false), "\u0000",
+  safe(if (.vcs | type) == "object" then .vcs.branch else null end // ""), "\u0000",
+  safe(if (.vcs | type) == "object" then .vcs.dirty else null end // false), "\u0000",
   "END\u0000"
 ' 2>/dev/null)
 

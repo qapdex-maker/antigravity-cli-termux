@@ -121,6 +121,21 @@ def main():
 
     print("✅ Test 7 Passed: VCS branch name (> 15 chars) truncated correctly (clean & dirty).")
 
+    # Test 8: Robust parsing with malformed/type-mismatched nested objects
+    payload8 = {
+        "agent_state": "idle",
+        "workspace": "not-an-object-but-a-string",
+        "sandbox": True, # boolean instead of object
+        "vcs": 12345 # number instead of object
+    }
+    stdout, stderr, code = run_title(payload8)
+    assert code == 0, f"Error: {stderr}"
+    title = stdout.strip()
+    # workspace should default to "unknown", sandbox to "false" (since sandbox is not an object), vcs to empty
+    assert "unknown" in title, f"Expected workspace to default to unknown, got: {title}"
+    assert "Sandbox OFF" in title, f"Expected sandbox to default to false, got: {title}"
+    print("✅ Test 8 Passed: Type-mismatched JSON payload parsed cleanly without jq crashes.")
+
     print("All title.sh tests passed successfully!")
 
 if __name__ == '__main__':

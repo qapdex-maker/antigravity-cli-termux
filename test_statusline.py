@@ -127,6 +127,25 @@ def main():
     assert "⚡" not in stdout_normal, "Unexpected caution icon (⚡) for normal context usage (< 60%)"
     print("✅ 6. Multi-dimensional context window alerts/cues (⚠️ for >= 90%, ⚡ for 60-90%) verified.")
 
+    # 7. Test 7: Robust parsing with malformed/type-mismatched nested objects in statusline.sh
+    payload_mismatched = {
+        "agent_state": "thinking",
+        "context_window": "not-an-object",
+        "vcs": True,
+        "sandbox": 12.34,
+        "artifact_count": 3,
+        "subagents": [],
+        "task_count": 2,
+        "model": "string-instead-of-object"
+    }
+    stdout_m, stderr_m, code_m = run_statusline(payload_mismatched, 80)
+    assert code_m == 0, f"Error: {stderr_m}"
+    # context_window.used_percentage should default to 0 (which means 0.0%)
+    assert "0.0%" in stdout_m, f"Expected 0.0% context window usage, got: {stdout_m}"
+    # sandbox should default to false (🔓 OFF)
+    assert "🔓 OFF" in stdout_m, f"Expected sandbox OFF, got: {stdout_m}"
+    print("✅ Test 7 Passed: Type-mismatched JSON payload parsed cleanly without jq crashes in statusline.")
+
     print("All tests passed successfully!")
 
 if __name__ == '__main__':
