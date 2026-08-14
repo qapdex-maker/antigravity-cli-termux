@@ -26,7 +26,7 @@
 **Prevention:** Always filter intermediate command outputs or JSON-parsed streams through `tr -d '\r'` before reading them into shell variables.
 
 ## 2026-07-21 - Line-Injection and Variable Misalignment in Multi-Field Shell Parsing
-**Vulnerability:** Multi-field JSON outputs parsed by Bash using standard newline-delimited `read` blocks can be manipulated if any field contains embedded newlines (such as directory or git branch names), shifting succeeding lines and overriding critical system state variables like sandbox status.
+**Vulnerability:** Multi-field JSON outputs parsed by Bash using standard newline-delimited `read -d ''` blocks can be manipulated if any field contains embedded newlines (such as directory or git branch names), shifting succeeding lines and overriding critical system state variables like sandbox status.
 **Learning:** Standard line-by-line `read` blocks assume fields never contain newlines. A malicious branch name with newlines can craft input that overrides variables parsed after it.
 **Prevention:** Always output fields null-delimited (using `jq -j` and `\u0000`) and consume them safely with `read -d '' -r`.
 
@@ -59,3 +59,8 @@
 **Vulnerability:** When parsing multi-field JSON outputs in Bash using null-delimited `read -d ''` blocks, any dynamic string field containing embedded null bytes (`\u0000`) can prematurely terminate a field. This causes the remaining string segments to shift into subsequent variables, leading to state spoofing or variable hijacking.
 **Learning:** Standard null-delimited parsing assumes fields do not contain embedded null characters. However, if dynamic inputs (e.g. branch names, model names, directory paths) contain embedded null bytes, `read -d ''` splits on those embedded nulls and shifts succeeding fields.
 **Prevention:** Always convert each JSON-extracted field using `tostring` and strip out null characters with `gsub("\u0000"; "")` inside the `jq` filter itself before emitting and parsing them.
+
+## 2026-08-06 - Fatal JQ Indexing Error on Type-Mismatched Nested Objects
+**Vulnerability:** When parsing optional nested properties in JQ (such as `.parent.child`), standard JQ paths can throw fatal syntax/indexing errors (such as `Cannot index string with string "child"`) if the `.parent` property exists but is not of type `object` (e.g., is a string, boolean, number, or null). This can halt script execution, bypass subsequent code paths, or crash daemon terminal renders.
+**Learning:** Standard safe navigation `.parent?.child` or default fallback expressions `.parent.child // ""` are only safe if the parent element is completely absent or evaluates to null. If parent has an unexpected type, JQ crashes.
+**Prevention:** Explicitly check the type of parent variables (e.g., `if (.parent | type) == "object" then .parent.child else null end`) before evaluating downstream sub-properties, ensuring graceful fallback defaults are used instead of throwing fatal errors.
