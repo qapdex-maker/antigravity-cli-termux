@@ -26,7 +26,7 @@
 **Prevention:** Always filter intermediate command outputs or JSON-parsed streams through `tr -d '\r'` before reading them into shell variables.
 
 ## 2026-07-21 - Line-Injection and Variable Misalignment in Multi-Field Shell Parsing
-**Vulnerability:** Multi-field JSON outputs parsed by Bash using standard newline-delimited `read` blocks can be manipulated if any field contains embedded newlines (such as directory or git branch names), shifting succeeding lines and overriding critical system state variables like sandbox status.
+**Vulnerability:** Multi-field JSON outputs parsed by Bash using standard newline-delimited `read -d ''` blocks can be manipulated if any field contains embedded newlines (such as directory or git branch names), shifting succeeding lines and overriding critical system state variables like sandbox status.
 **Learning:** Standard line-by-line `read` blocks assume fields never contain newlines. A malicious branch name with newlines can craft input that overrides variables parsed after it.
 **Prevention:** Always output fields null-delimited (using `jq -j` and `\u0000`) and consume them safely with `read -d '' -r`.
 
