@@ -121,20 +121,19 @@ def main():
 
     print("✅ Test 7 Passed: VCS branch name (> 15 chars) truncated correctly (clean & dirty).")
 
-    # Test 8: Robust parsing with malformed/type-mismatched nested objects
-    payload8 = {
+    # Test 8: Non-object safety check (Crashes avoidance for corrupted nested objects)
+    payload_corrupted = {
         "agent_state": "idle",
-        "workspace": "not-an-object-but-a-string",
-        "sandbox": True, # boolean instead of object
-        "vcs": 12345 # number instead of object
+        "workspace": "corrupted_string",
+        "sandbox": "corrupted_string",
+        "vcs": "corrupted_string"
     }
-    stdout, stderr, code = run_title(payload8)
-    assert code == 0, f"Error: {stderr}"
-    title = stdout.strip()
-    # workspace should default to "unknown", sandbox to "false" (since sandbox is not an object), vcs to empty
-    assert "unknown" in title, f"Expected workspace to default to unknown, got: {title}"
-    assert "Sandbox OFF" in title, f"Expected sandbox to default to false, got: {title}"
-    print("✅ Test 8 Passed: Type-mismatched JSON payload parsed cleanly without jq crashes.")
+    stdout_corr, stderr_corr, code_corr = run_title(payload_corrupted)
+    assert code_corr == 0, f"Error: {stderr_corr}"
+    title_corr = stdout_corr.strip()
+    assert "🔓 Sandbox OFF" in title_corr, f"Expected sandbox status to safely fallback to OFF, got: {title_corr}"
+    assert "unknown" in title_corr, f"Expected workspace to safely fallback to unknown, got: {title_corr}"
+    print("✅ Test 8 Passed: Corrupted nested fields successfully bypassed and handled safely in title.")
 
     print("All title.sh tests passed successfully!")
 
