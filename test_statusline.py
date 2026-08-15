@@ -88,6 +88,15 @@ def main():
     assert "STOPPED" in stdout_i or "🛑" in stdout_i, "Expected 'STOPPED' state in statusline"
     print("✅ New cancelled, stopped, and interrupted states are verified.")
 
+    # 4b. Test waiting / user input states: input_required, waiting, permission_required, prompt
+    for st in ["input_required", "waiting", "permission_required", "prompt"]:
+        payload_wait = payload.copy()
+        payload_wait["agent_state"] = st
+        stdout_w, _, code_w = run_statusline(payload_wait, 80)
+        assert code_w == 0
+        assert "WAITING" in stdout_w and "❓" in stdout_w, f"Expected 'WAITING' & '❓' for state {st}"
+    print("✅ Waiting for input states (waiting, input_required, permission_required, prompt) verified in statusline.")
+
     # Test 5: Null byte injection mitigation
     payload_null = payload.copy()
     payload_null["vcs"] = {"branch": "main\u0000true\u0000", "dirty": False}

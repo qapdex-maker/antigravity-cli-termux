@@ -77,3 +77,7 @@
 ## 2026-08-13 - Visual Parity & Safe Dynamic Model Display in CLI Window Titles
 **Learning:** Rendering the active AI model name (e.g. `(🧠 claude-3-5)`) directly in the terminal window/tab title provides immediate session context without requiring prompt line queries. To prevent title bar overflow in layout-constrained taskbars, model names must be truncated consistently with branch names (e.g., prefix and suffix truncation).
 **Action:** Always append safe-navigated and sanitized active model badges in CLI window titles, utilizing substring slicing to truncate labels that exceed 15 characters.
+
+## 2026-08-14 - Visual Affordances for Interactive User-Input States
+**Learning:** When autonomous CLI agents pause to await user prompt input or tool permissions, unhandled state strings can default to generic or machine-like fallbacks. Explicitly mapping user-interaction states (`waiting`, `input_required`, `permission_required`, `prompt`) to visual cues (`❓ WAITING` in yellow / `❓ Waiting for Input`) across both statuslines and desktop window titles provides clear, immediate, multi-dimensional feedback across workspace contexts.
+**Action:** Always map interactive agent states to prominent question-mark glyphs and high-contrast yellow indicators in both prompt lines and taskbar headers.

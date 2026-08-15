@@ -112,6 +112,7 @@ case "$STATE" in
   tool_use)     S="${FG_BRIGHT_MAGENTA}${B}🔧 TOOL${R}" ;;
   review)       S="${FG_BRIGHT_BLUE}${B}👀 REVIEW${R}" ;;
   paused)       S="${FG_BRIGHT_YELLOW}${B}⏸️ PAUSED${R}" ;;
+  waiting|input_required|permission_required|prompt) S="${FG_BRIGHT_YELLOW}${B}❓ WAITING${R}" ;;
   completed|success) S="${FG_BRIGHT_GREEN}${B}✅ COMPLETED${R}" ;;
   failed|error)      S="${FG_BRIGHT_RED}${B}❌ FAILED${R}" ;;
   cancelled)         S="${FG_BRIGHT_RED}${B}🛑 CANCELLED${R}" ;;
