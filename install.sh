@@ -457,7 +457,10 @@ case ":$PATH:" in
     ;;
   *)
     ACTIVE_SHELL="${SHELL##*/}"
-    [ -z "$ACTIVE_SHELL" ] && ACTIVE_SHELL="bash"
+    # Security Enhancement (Sentinel): Sanitize ACTIVE_SHELL to prevent terminal escape sequence or output injection (POSIX compatible)
+    case "$ACTIVE_SHELL" in
+      *[!a-zA-Z0-9_-]*|"") ACTIVE_SHELL="bash" ;;
+    esac
 
     case "$ACTIVE_SHELL" in
       zsh)
