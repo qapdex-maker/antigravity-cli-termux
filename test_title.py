@@ -176,6 +176,19 @@ def main():
     assert "gemini;rm" not in title11, "Expected malicious model name to be sanitized and ignored"
     print("✅ Test 11 Passed: Malicious active model name sanitized and ignored successfully.")
 
+    # Test 12: Waiting for input states
+    for st in ["input_required", "waiting", "permission_required", "prompt"]:
+        payload12 = {
+            "agent_state": st,
+            "workspace": {"current_dir": "/home/user/project"},
+            "sandbox": {"enabled": True}
+        }
+        stdout12, stderr12, code12 = run_title(payload12)
+        assert code12 == 0, f"Error: {stderr12}"
+        title12 = stdout12.strip()
+        assert "❓ Waiting for Input | project" in title12, f"Expected '❓ Waiting for Input' for state {st}, got: {title12}"
+    print("✅ Test 12 Passed: Waiting for input states (waiting, input_required, permission_required, prompt) verified in title.")
+
     print("All title.sh tests passed successfully!")
 
 if __name__ == '__main__':

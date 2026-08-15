@@ -73,6 +73,7 @@ case "$STATE" in
   tool_use)     EMOJI="🔧"; LABEL="Using Tool" ;;
   review)       EMOJI="👀"; LABEL="Review" ;;
   paused)       EMOJI="⏸️"; LABEL="Paused" ;;
+  waiting|input_required|permission_required|prompt) EMOJI="❓"; LABEL="Waiting for Input" ;;
   completed|success) EMOJI="✅"; LABEL="Completed" ;;
   failed|error)      EMOJI="❌"; LABEL="Failed" ;;
   cancelled)         EMOJI="🛑"; LABEL="Cancelled" ;;
