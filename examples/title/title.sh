@@ -20,10 +20,12 @@ set -euo pipefail
   read -d '' -r _ || true
 } < <(jq -j '
   def safe(v): (v | tostring | split("\u0000") | join("") | split("\r") | join(""));
+  def safe_get(key): if type == "object" then .[key] else null end;
   def titlecase: (tostring | split("_") | join(" ") | (.[0:1] | ascii_upcase) + .[1:]);
-  def safe_nested(parent_key; child_key): if (.[parent_key] | type) == "object" then .[parent_key][child_key] else null end;
-  safe(.agent_state // "idle"), "\u0000",
-  safe(.agent_state // "idle" | titlecase), "\u0000",
+  # Security Enhancement (Sentinel): Assert root is an object before indexing parent_key to prevent fatal jq crashes on non-object root JSON payloads
+  def safe_nested(parent_key; child_key): if (type == "object") and (.[parent_key] | type == "object") then .[parent_key][child_key] else null end;
+  safe(safe_get("agent_state") // "idle"), "\u0000",
+  safe((safe_get("agent_state") // "idle") | titlecase), "\u0000",
   safe(safe_nested("workspace"; "current_dir") // ""), "\u0000",
   safe(safe_nested("sandbox"; "enabled") // false), "\u0000",
   safe(safe_nested("vcs"; "branch") // ""), "\u0000",
