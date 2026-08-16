@@ -163,6 +163,20 @@ def main():
     assert "🔓 OFF" in stdout_corr, f"Expected sandbox status to safely fallback, got: {stdout_corr}"
     print("✅ 7. Corrupted nested fields successfully bypassed and handled safely in statusline.")
 
+    # 7b. Raw non-object scalar JSON payload (e.g. string/number/boolean as root)
+    for raw_val in ["raw_string_root", 12345, True]:
+        proc = subprocess.Popen(
+            ['examples/statusline/statusline.sh'],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        stdout_raw, stderr_raw = proc.communicate(input=json.dumps(raw_val))
+        assert proc.returncode == 0, f"Error: {stderr_raw}"
+        assert "READY" in stdout_raw or "🟢" in stdout_raw, f"Expected safe fallback output for raw scalar JSON root, got: {stdout_raw}"
+    print("✅ 7b. Raw scalar non-object JSON root payloads handled safely in statusline.")
+
     print("All tests passed successfully!")
 
 if __name__ == '__main__':

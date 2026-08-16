@@ -10,8 +10,8 @@ set -euo pipefail
 # in high-frequency title rendering.
 # Security Enhancement (Sentinel): Transitioning to null delimiters avoids field misalignment on embedded newlines.
 {
-  read -d '' -r STATE || true
-  read -d '' -r FALLBACK_LABEL || true
+  read -d '' -r EMOJI || true
+  read -d '' -r LABEL || true
   read -d '' -r CWD || true
   read -d '' -r SANDBOX || true
   read -d '' -r VCS_BRANCH || true
@@ -20,10 +20,12 @@ set -euo pipefail
   read -d '' -r _ || true
 } < <(jq -j '
   def safe(v): (v | tostring | split("\u0000") | join("") | split("\r") | join(""));
+  def safe_get(key): if type == "object" then .[key] else null end;
   def titlecase: (tostring | split("_") | join(" ") | (.[0:1] | ascii_upcase) + .[1:]);
-  def safe_nested(parent_key; child_key): if (.[parent_key] | type) == "object" then .[parent_key][child_key] else null end;
-  safe(.agent_state // "idle"), "\u0000",
-  safe(.agent_state // "idle" | titlecase), "\u0000",
+  # Security Enhancement (Sentinel): Assert root is an object before indexing parent_key to prevent fatal jq crashes on non-object root JSON payloads
+  def safe_nested(parent_key; child_key): if (type == "object") and (.[parent_key] | type == "object") then .[parent_key][child_key] else null end;
+  safe(safe_get("agent_state") // "idle"), "\u0000",
+  safe((safe_get("agent_state") // "idle") | titlecase), "\u0000",
   safe(safe_nested("workspace"; "current_dir") // ""), "\u0000",
   safe(safe_nested("sandbox"; "enabled") // false), "\u0000",
   safe(safe_nested("vcs"; "branch") // ""), "\u0000",
@@ -56,8 +58,8 @@ else
   WORKSPACE="unknown"
 fi
 
-[[ -z "${STATE:-}"      || "$STATE"      == *[!a-zA-Z0-9_-]* ]] && STATE="idle"
-[[ -z "${FALLBACK_LABEL:-}" || "$FALLBACK_LABEL" == *[!a-zA-Z0-9_\ -]* ]] && FALLBACK_LABEL="Idle"
+[[ -z "${EMOJI:-}" ]] && EMOJI="🤖"
+[[ -z "${LABEL:-}"       || "$LABEL"      == *[!a-zA-Z0-9_\ -]* ]] && LABEL="Idle"
 [[ -z "${WORKSPACE:-}"  || "$WORKSPACE"  == *[!a-zA-Z0-9_./\ -]* ]] && WORKSPACE="unknown"
 [[ "${SANDBOX:-}"    != "true" && "$SANDBOX" != "false" ]] && SANDBOX="false"
 [[ -z "${VCS_BRANCH:-}" || "$VCS_BRANCH" == *[!a-zA-Z0-9_./-]* ]] && VCS_BRANCH=""

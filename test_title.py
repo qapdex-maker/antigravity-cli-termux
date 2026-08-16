@@ -136,6 +136,14 @@ def main():
     assert "unknown" in title_corr, f"Expected workspace to safely fallback to unknown, got: {title_corr}"
     print("✅ Test 8 Passed: Corrupted nested fields successfully bypassed and handled safely in title.")
 
+    # Test 8b: Raw non-object scalar JSON payload (e.g. string/number/boolean as root)
+    for raw_val in ["raw_string_root", 12345, True]:
+        stdout_raw, stderr_raw, code_raw = run_title(raw_val)
+        assert code_raw == 0, f"Error: {stderr_raw}"
+        title_raw = stdout_raw.strip()
+        assert "🟢 Idle | unknown" in title_raw, f"Expected safe fallback for raw non-object JSON root, got: {title_raw}"
+    print("✅ Test 8b Passed: Raw scalar non-object JSON root payloads handled safely in title.")
+
     # Test 9: Active model integration (Standard model name)
     payload9 = {
         "agent_state": "idle",
