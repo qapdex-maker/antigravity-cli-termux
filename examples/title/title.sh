@@ -66,6 +66,28 @@ fi
 [[ "${VCS_DIRTY:-}"  != "true" && "$VCS_DIRTY" != "false" ]] && VCS_DIRTY="false"
 [[ -z "${MODEL:-}"      || "$MODEL"      == *[!a-zA-Z0-9_./\ -]* ]] && MODEL=""
 
+# Map state to emoji and polished label
+case "$STATE" in
+  initializing) EMOJI="🚀"; LABEL="Initializing" ;;
+  idle)         EMOJI="🟢"; LABEL="Idle" ;;
+  thinking)     EMOJI="🤔"; LABEL="Thinking" ;;
+  working)      EMOJI="🏃"; LABEL="Working" ;;
+  tool_use)     EMOJI="🔧"; LABEL="Using Tool" ;;
+  review)       EMOJI="👀"; LABEL="Review" ;;
+  paused)       EMOJI="⏸️"; LABEL="Paused" ;;
+  waiting|input_required|permission_required|prompt) EMOJI="❓"; LABEL="Waiting for Input" ;;
+  compacting|context_compacting|summarizing)          EMOJI="🧹"; LABEL="Compacting" ;;
+  retry|retrying)                                    EMOJI="🔄"; LABEL="Retrying" ;;
+  completed|success) EMOJI="✅"; LABEL="Completed" ;;
+  failed|error)      EMOJI="❌"; LABEL="Failed" ;;
+  cancelled)         EMOJI="🛑"; LABEL="Cancelled" ;;
+  stopped|interrupted) EMOJI="🛑"; LABEL="Stopped" ;;
+  aborted)           EMOJI="🛑"; LABEL="Aborted" ;;
+  *)            EMOJI="🤖"
+                LABEL="$FALLBACK_LABEL"
+                ;;
+esac
+
 # Build multi-dimensional branch text badge and safety visual cue since color is not supported in typical window titles
 M_TXT=""
 if [ -n "$MODEL" ]; then

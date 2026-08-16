@@ -115,6 +115,8 @@ case "$STATE" in
   review)       S="${FG_BRIGHT_BLUE}${B}👀 REVIEW${R}" ;;
   paused)       S="${FG_BRIGHT_YELLOW}${B}⏸️ PAUSED${R}" ;;
   waiting|input_required|permission_required|prompt) S="${FG_BRIGHT_YELLOW}${B}❓ WAITING${R}" ;;
+  compacting|context_compacting|summarizing)          S="${FG_BRIGHT_MAGENTA}${B}🧹 COMPACTING${R}" ;;
+  retry|retrying)                                    S="${FG_BRIGHT_YELLOW}${B}🔄 RETRYING${R}" ;;
   completed|success) S="${FG_BRIGHT_GREEN}${B}✅ COMPLETED${R}" ;;
   failed|error)      S="${FG_BRIGHT_RED}${B}❌ FAILED${R}" ;;
   cancelled)         S="${FG_BRIGHT_RED}${B}🛑 CANCELLED${R}" ;;
