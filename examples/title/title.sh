@@ -74,6 +74,8 @@ case "$STATE" in
   review)       EMOJI="👀"; LABEL="Review" ;;
   paused)       EMOJI="⏸️"; LABEL="Paused" ;;
   waiting|input_required|permission_required|prompt) EMOJI="❓"; LABEL="Waiting for Input" ;;
+  compacting|context_compacting|summarizing)          EMOJI="🧹"; LABEL="Compacting" ;;
+  retry|retrying)                                    EMOJI="🔄"; LABEL="Retrying" ;;
   completed|success) EMOJI="✅"; LABEL="Completed" ;;
   failed|error)      EMOJI="❌"; LABEL="Failed" ;;
   cancelled)         EMOJI="🛑"; LABEL="Cancelled" ;;

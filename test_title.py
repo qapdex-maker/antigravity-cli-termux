@@ -189,6 +189,30 @@ def main():
         assert "❓ Waiting for Input | project" in title12, f"Expected '❓ Waiting for Input' for state {st}, got: {title12}"
     print("✅ Test 12 Passed: Waiting for input states (waiting, input_required, permission_required, prompt) verified in title.")
 
+    # Test 13: Compacting and retrying states
+    for st in ["compacting", "context_compacting", "summarizing"]:
+        payload13 = {
+            "agent_state": st,
+            "workspace": {"current_dir": "/home/user/project"},
+            "sandbox": {"enabled": True}
+        }
+        stdout13, stderr13, code13 = run_title(payload13)
+        assert code13 == 0, f"Error: {stderr13}"
+        title13 = stdout13.strip()
+        assert "🧹 Compacting | project" in title13, f"Expected '🧹 Compacting' for state {st}, got: {title13}"
+
+    for st in ["retry", "retrying"]:
+        payload13_r = {
+            "agent_state": st,
+            "workspace": {"current_dir": "/home/user/project"},
+            "sandbox": {"enabled": True}
+        }
+        stdout13_r, stderr13_r, code13_r = run_title(payload13_r)
+        assert code13_r == 0, f"Error: {stderr13_r}"
+        title13_r = stdout13_r.strip()
+        assert "🔄 Retrying | project" in title13_r, f"Expected '🔄 Retrying' for state {st}, got: {title13_r}"
+    print("✅ Test 13 Passed: Compacting and retrying states verified in title.")
+
     print("All title.sh tests passed successfully!")
 
 if __name__ == '__main__':

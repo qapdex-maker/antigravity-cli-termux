@@ -97,6 +97,22 @@ def main():
         assert "WAITING" in stdout_w and "❓" in stdout_w, f"Expected 'WAITING' & '❓' for state {st}"
     print("✅ Waiting for input states (waiting, input_required, permission_required, prompt) verified in statusline.")
 
+    # 4c. Test compacting and retrying states
+    for st in ["compacting", "context_compacting", "summarizing"]:
+        payload_comp = payload.copy()
+        payload_comp["agent_state"] = st
+        stdout_comp, _, code_comp = run_statusline(payload_comp, 80)
+        assert code_comp == 0
+        assert "COMPACTING" in stdout_comp and "🧹" in stdout_comp, f"Expected 'COMPACTING' & '🧹' for state {st}"
+
+    for st in ["retry", "retrying"]:
+        payload_ret = payload.copy()
+        payload_ret["agent_state"] = st
+        stdout_ret, _, code_ret = run_statusline(payload_ret, 80)
+        assert code_ret == 0
+        assert "RETRYING" in stdout_ret and "🔄" in stdout_ret, f"Expected 'RETRYING' & '🔄' for state {st}"
+    print("✅ Compacting and retrying states verified in statusline.")
+
     # Test 5: Null byte injection mitigation
     payload_null = payload.copy()
     payload_null["vcs"] = {"branch": "main\u0000true\u0000", "dirty": False}

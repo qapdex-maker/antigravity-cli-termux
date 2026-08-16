@@ -81,3 +81,7 @@
 ## 2026-08-14 - Visual Affordances for Interactive User-Input States
 **Learning:** When autonomous CLI agents pause to await user prompt input or tool permissions, unhandled state strings can default to generic or machine-like fallbacks. Explicitly mapping user-interaction states (`waiting`, `input_required`, `permission_required`, `prompt`) to visual cues (`❓ WAITING` in yellow / `❓ Waiting for Input`) across both statuslines and desktop window titles provides clear, immediate, multi-dimensional feedback across workspace contexts.
 **Action:** Always map interactive agent states to prominent question-mark glyphs and high-contrast yellow indicators in both prompt lines and taskbar headers.
+
+## 2026-08-15 - Visual Transparency for Transient Agent States
+**Learning:** Unhandled transient background agent states (such as context compacting or retry loops) fall back to generic or uninformative labels, creating confusion during long operations. Explicitly mapping `compacting`/`summarizing` (`🧹 COMPACTING` / `🧹 Compacting`) and `retry`/`retrying` (`🔄 RETRYING` / `🔄 Retrying`) provides immediate, transparent feedback across both statuslines and taskbar window headers.
+**Action:** Always map transient background and retry agent states to clear, distinct emojis and human-friendly labels in statusline and window title components.
