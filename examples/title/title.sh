@@ -20,29 +20,12 @@ set -euo pipefail
   read -d '' -r _ || true
 } < <(jq -j '
   def safe(v): (v | tostring | split("\u0000") | join("") | split("\r") | join(""));
-  def safe_nested(parent_key; child_key): if (.[parent_key] | type) == "object" then .[parent_key][child_key] else null end;
-  # Performance Optimization (Bolt): Map state directly to emoji and label inside jq in a single pass.
-  # Evaluating titlecase conditionally only on custom/unknown fallback states eliminates redundant string manipulation overhead.
-  def state_info:
-    (.agent_state // "idle") as $st |
-    if $st == "initializing" then ["🚀", "Initializing"]
-    elif $st == "idle" then ["🟢", "Idle"]
-    elif $st == "thinking" then ["🤔", "Thinking"]
-    elif $st == "working" then ["🏃", "Working"]
-    elif $st == "tool_use" then ["🔧", "Using Tool"]
-    elif $st == "review" then ["👀", "Review"]
-    elif $st == "paused" then ["⏸️", "Paused"]
-    elif ($st == "waiting" or $st == "input_required" or $st == "permission_required" or $st == "prompt") then ["❓", "Waiting for Input"]
-    elif ($st == "completed" or $st == "success") then ["✅", "Completed"]
-    elif ($st == "failed" or $st == "error") then ["❌", "Failed"]
-    elif $st == "cancelled" then ["🛑", "Cancelled"]
-    elif ($st == "stopped" or $st == "interrupted") then ["🛑", "Stopped"]
-    elif $st == "aborted" then ["🛑", "Aborted"]
-    else ["🤖", ($st | split("_") | join(" ") | (.[0:1] | ascii_upcase) + .[1:])]
-    end;
-  state_info as $si |
-  safe($si[0]), "\u0000",
-  safe($si[1]), "\u0000",
+  def safe_get(key): if type == "object" then .[key] else null end;
+  def titlecase: (tostring | split("_") | join(" ") | (.[0:1] | ascii_upcase) + .[1:]);
+  # Security Enhancement (Sentinel): Assert root is an object before indexing parent_key to prevent fatal jq crashes on non-object root JSON payloads
+  def safe_nested(parent_key; child_key): if (type == "object") and (.[parent_key] | type == "object") then .[parent_key][child_key] else null end;
+  safe(safe_get("agent_state") // "idle"), "\u0000",
+  safe((safe_get("agent_state") // "idle") | titlecase), "\u0000",
   safe(safe_nested("workspace"; "current_dir") // ""), "\u0000",
   safe(safe_nested("sandbox"; "enabled") // false), "\u0000",
   safe(safe_nested("vcs"; "branch") // ""), "\u0000",
