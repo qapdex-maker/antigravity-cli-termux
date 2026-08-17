@@ -9,9 +9,10 @@ set -euo pipefail
 # the single-pass jq filter avoids the overhead of executing separate Bash string replacements for 5 variables
 # in high-frequency title rendering.
 # Security Enhancement (Sentinel): Transitioning to null delimiters avoids field misalignment on embedded newlines.
+# Security Fix (Sentinel): Assign raw agent state and titlecase fallback label to STATE and FALLBACK_LABEL to prevent unbound variable crashes under set -u.
 {
-  read -d '' -r EMOJI || true
-  read -d '' -r LABEL || true
+  read -d '' -r STATE || true
+  read -d '' -r FALLBACK_LABEL || true
   read -d '' -r CWD || true
   read -d '' -r SANDBOX || true
   read -d '' -r VCS_BRANCH || true
@@ -58,13 +59,17 @@ else
   WORKSPACE="unknown"
 fi
 
-[[ -z "${EMOJI:-}" ]] && EMOJI="🤖"
-[[ -z "${LABEL:-}"       || "$LABEL"      == *[!a-zA-Z0-9_\ -]* ]] && LABEL="Idle"
-[[ -z "${WORKSPACE:-}"  || "$WORKSPACE"  == *[!a-zA-Z0-9_./\ -]* ]] && WORKSPACE="unknown"
+# Security Enhancement (Sentinel): Whitelist validate STATE and FALLBACK_LABEL to enforce strict bounds and prevent unvalidated variable execution.
+[[ -z "${STATE:-}"          || "$STATE"          == *[!a-zA-Z0-9_-]* ]] && STATE="idle"
+[[ -z "${FALLBACK_LABEL:-}" || "$FALLBACK_LABEL" == *[!a-zA-Z0-9_\ -]* ]] && FALLBACK_LABEL="Idle"
+[[ -z "${WORKSPACE:-}"     || "$WORKSPACE"      == *[!a-zA-Z0-9_./\ -]* ]] && WORKSPACE="unknown"
 [[ "${SANDBOX:-}"    != "true" && "$SANDBOX" != "false" ]] && SANDBOX="false"
 [[ -z "${VCS_BRANCH:-}" || "$VCS_BRANCH" == *[!a-zA-Z0-9_./-]* ]] && VCS_BRANCH=""
 [[ "${VCS_DIRTY:-}"  != "true" && "$VCS_DIRTY" != "false" ]] && VCS_DIRTY="false"
 [[ -z "${MODEL:-}"      || "$MODEL"      == *[!a-zA-Z0-9_./\ -]* ]] && MODEL=""
+
+EMOJI="🤖"
+LABEL="$FALLBACK_LABEL"
 
 # Map state to emoji and polished label
 case "$STATE" in
