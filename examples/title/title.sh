@@ -10,8 +10,8 @@ set -euo pipefail
 # in high-frequency title rendering.
 # Security Enhancement (Sentinel): Transitioning to null delimiters avoids field misalignment on embedded newlines.
 {
-  read -d '' -r EMOJI || true
-  read -d '' -r LABEL || true
+  read -d '' -r STATE || true
+  read -d '' -r FALLBACK_LABEL || true
   read -d '' -r CWD || true
   read -d '' -r SANDBOX || true
   read -d '' -r VCS_BRANCH || true
@@ -58,8 +58,8 @@ else
   WORKSPACE="unknown"
 fi
 
-[[ -z "${EMOJI:-}" ]] && EMOJI="🤖"
-[[ -z "${LABEL:-}"       || "$LABEL"      == *[!a-zA-Z0-9_\ -]* ]] && LABEL="Idle"
+[[ -z "${STATE:-}"          || "$STATE"          == *[!a-zA-Z0-9_-]* ]] && STATE="idle"
+[[ -z "${FALLBACK_LABEL:-}" || "$FALLBACK_LABEL" == *[!a-zA-Z0-9_\ -]* ]] && FALLBACK_LABEL="Idle"
 [[ -z "${WORKSPACE:-}"  || "$WORKSPACE"  == *[!a-zA-Z0-9_./\ -]* ]] && WORKSPACE="unknown"
 [[ "${SANDBOX:-}"    != "true" && "$SANDBOX" != "false" ]] && SANDBOX="false"
 [[ -z "${VCS_BRANCH:-}" || "$VCS_BRANCH" == *[!a-zA-Z0-9_./-]* ]] && VCS_BRANCH=""
