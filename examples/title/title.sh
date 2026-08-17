@@ -79,10 +79,9 @@ else
   WORKSPACE="unknown"
 fi
 
-# Security Enhancement (Sentinel): Whitelist validate STATE and FALLBACK_LABEL to enforce strict bounds and prevent unvalidated variable execution.
 [[ -z "${STATE:-}"          || "$STATE"          == *[!a-zA-Z0-9_-]* ]] && STATE="idle"
 [[ -z "${FALLBACK_LABEL:-}" || "$FALLBACK_LABEL" == *[!a-zA-Z0-9_\ -]* ]] && FALLBACK_LABEL="Idle"
-[[ -z "${WORKSPACE:-}"     || "$WORKSPACE"      == *[!a-zA-Z0-9_./\ -]* ]] && WORKSPACE="unknown"
+[[ -z "${WORKSPACE:-}"  || "$WORKSPACE"  == *[!a-zA-Z0-9_./\ -]* ]] && WORKSPACE="unknown"
 [[ "${SANDBOX:-}"    != "true" && "$SANDBOX" != "false" ]] && SANDBOX="false"
 [[ -z "${VCS_BRANCH:-}" || "$VCS_BRANCH" == *[!a-zA-Z0-9_./-]* ]] && VCS_BRANCH=""
 [[ "${VCS_DIRTY:-}"  != "true" && "$VCS_DIRTY" != "false" ]] && VCS_DIRTY="false"
