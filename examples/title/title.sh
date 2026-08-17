@@ -7,7 +7,7 @@ set -euo pipefail
 # We also use tr -d '\r' to strip carriage returns to prevent CRLF/terminal injection.
 # Security/Performance Optimization (Bolt): Stripping both null-bytes and carriage returns (\r) directly inside
 # the single-pass jq filter avoids the overhead of executing separate Bash string replacements for 5 variables
-# in high-frequency title rendering.
+# in high-frequency title rendering. Resolving state emoji and label inside jq removes the need for Bash case mapping.
 # Security Enhancement (Sentinel): Transitioning to null delimiters avoids field misalignment on embedded newlines.
 # Security Fix (Sentinel): Assign raw agent state and titlecase fallback label to STATE and FALLBACK_LABEL to prevent unbound variable crashes under set -u.
 {
@@ -25,8 +25,28 @@ set -euo pipefail
   def titlecase: (tostring | split("_") | join(" ") | (.[0:1] | ascii_upcase) + .[1:]);
   # Security Enhancement (Sentinel): Assert root is an object before indexing parent_key to prevent fatal jq crashes on non-object root JSON payloads
   def safe_nested(parent_key; child_key): if (type == "object") and (.[parent_key] | type == "object") then .[parent_key][child_key] else null end;
-  safe(safe_get("agent_state") // "idle"), "\u0000",
-  safe((safe_get("agent_state") // "idle") | titlecase), "\u0000",
+
+  (safe_get("agent_state") // "idle") as $st |
+  (if $st == "initializing" then ["🚀", "Initializing"]
+   elif $st == "idle" then ["🟢", "Idle"]
+   elif $st == "thinking" then ["🤔", "Thinking"]
+   elif $st == "working" then ["🏃", "Working"]
+   elif $st == "tool_use" then ["🔧", "Using Tool"]
+   elif $st == "review" then ["👀", "Review"]
+   elif $st == "paused" then ["⏸️", "Paused"]
+   elif ($st == "waiting" or $st == "input_required" or $st == "permission_required" or $st == "prompt") then ["❓", "Waiting for Input"]
+   elif ($st == "compacting" or $st == "context_compacting" or $st == "summarizing") then ["🧹", "Compacting"]
+   elif ($st == "retry" or $st == "retrying") then ["🔄", "Retrying"]
+   elif ($st == "completed" or $st == "success") then ["✅", "Completed"]
+   elif ($st == "failed" or $st == "error") then ["❌", "Failed"]
+   elif $st == "cancelled" then ["🛑", "Cancelled"]
+   elif ($st == "stopped" or $st == "interrupted") then ["🛑", "Stopped"]
+   elif $st == "aborted" then ["🛑", "Aborted"]
+   else ["🤖", ($st | titlecase)]
+   end) as $res |
+
+  safe($res[0]), "\u0000",
+  safe($res[1]), "\u0000",
   safe(safe_nested("workspace"; "current_dir") // ""), "\u0000",
   safe(safe_nested("sandbox"; "enabled") // false), "\u0000",
   safe(safe_nested("vcs"; "branch") // ""), "\u0000",
