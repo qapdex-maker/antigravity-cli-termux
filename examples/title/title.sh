@@ -9,10 +9,10 @@ set -euo pipefail
 # the single-pass jq filter avoids the overhead of executing separate Bash string replacements for 5 variables
 # in high-frequency title rendering. Resolving state emoji and label inside jq removes the need for Bash case mapping.
 # Security Enhancement (Sentinel): Transitioning to null delimiters avoids field misalignment on embedded newlines.
-# Security Fix (Sentinel): Assign raw agent state and titlecase fallback label to STATE and FALLBACK_LABEL to prevent unbound variable crashes under set -u.
+# Performance Optimization (Bolt): Read resolved EMOJI and LABEL directly from single-pass jq filter to avoid redundant Bash case mapping.
 {
-  read -d '' -r STATE || true
-  read -d '' -r FALLBACK_LABEL || true
+  read -d '' -r EMOJI || true
+  read -d '' -r LABEL || true
   read -d '' -r CWD || true
   read -d '' -r SANDBOX || true
   read -d '' -r VCS_BRANCH || true
@@ -57,8 +57,8 @@ set -euo pipefail
 
 # ─── Workspace Extraction, Input Validation, Sanitization & Fallbacks ───────
 # Ensure variables are strictly validated, sanitized, and set to default fallbacks in a single pass.
-# Performance Optimization (Bolt): Combined fallback & validation checks completely avoid redundant shell operations
-# on clean paths, yielding an expected speedup in title rendering.
+# Performance Optimization (Bolt): Reading EMOJI and LABEL directly from single-pass jq avoids running
+# redundant case statements in Bash and eliminates duplicate state mapping logic.
 if [ -n "${CWD:-}" ]; then
   if [[ "$CWD" == "/google/src/cloud/"* ]]; then
     TEMP_CWD="${CWD#/google/src/cloud/}"
@@ -79,38 +79,13 @@ else
   WORKSPACE="unknown"
 fi
 
-[[ -z "${STATE:-}"          || "$STATE"          == *[!a-zA-Z0-9_-]* ]] && STATE="idle"
-[[ -z "${FALLBACK_LABEL:-}" || "$FALLBACK_LABEL" == *[!a-zA-Z0-9_\ -]* ]] && FALLBACK_LABEL="Idle"
+[[ -z "${EMOJI:-}" ]] && EMOJI="🤖"
+[[ -z "${LABEL:-}"           || "$LABEL"          == *[!a-zA-Z0-9_\ -]* ]] && LABEL="Idle"
 [[ -z "${WORKSPACE:-}"  || "$WORKSPACE"  == *[!a-zA-Z0-9_./\ -]* ]] && WORKSPACE="unknown"
 [[ "${SANDBOX:-}"    != "true" && "$SANDBOX" != "false" ]] && SANDBOX="false"
 [[ -z "${VCS_BRANCH:-}" || "$VCS_BRANCH" == *[!a-zA-Z0-9_./-]* ]] && VCS_BRANCH=""
 [[ "${VCS_DIRTY:-}"  != "true" && "$VCS_DIRTY" != "false" ]] && VCS_DIRTY="false"
 [[ -z "${MODEL:-}"      || "$MODEL"      == *[!a-zA-Z0-9_./\ -]* ]] && MODEL=""
-
-EMOJI="🤖"
-LABEL="$FALLBACK_LABEL"
-
-# Map state to emoji and polished label
-case "$STATE" in
-  initializing) EMOJI="🚀"; LABEL="Initializing" ;;
-  idle)         EMOJI="🟢"; LABEL="Idle" ;;
-  thinking)     EMOJI="🤔"; LABEL="Thinking" ;;
-  working)      EMOJI="🏃"; LABEL="Working" ;;
-  tool_use)     EMOJI="🔧"; LABEL="Using Tool" ;;
-  review)       EMOJI="👀"; LABEL="Review" ;;
-  paused)       EMOJI="⏸️"; LABEL="Paused" ;;
-  waiting|input_required|permission_required|prompt) EMOJI="❓"; LABEL="Waiting for Input" ;;
-  compacting|context_compacting|summarizing)          EMOJI="🧹"; LABEL="Compacting" ;;
-  retry|retrying)                                    EMOJI="🔄"; LABEL="Retrying" ;;
-  completed|success) EMOJI="✅"; LABEL="Completed" ;;
-  failed|error)      EMOJI="❌"; LABEL="Failed" ;;
-  cancelled)         EMOJI="🛑"; LABEL="Cancelled" ;;
-  stopped|interrupted) EMOJI="🛑"; LABEL="Stopped" ;;
-  aborted)           EMOJI="🛑"; LABEL="Aborted" ;;
-  *)            EMOJI="🤖"
-                LABEL="$FALLBACK_LABEL"
-                ;;
-esac
 
 # Build multi-dimensional branch text badge and safety visual cue since color is not supported in typical window titles
 M_TXT=""
