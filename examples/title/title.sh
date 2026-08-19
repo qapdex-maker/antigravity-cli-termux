@@ -9,7 +9,7 @@ set -euo pipefail
 # the single-pass jq filter avoids the overhead of executing separate Bash string replacements for 5 variables
 # in high-frequency title rendering. Resolving state emoji and label inside jq removes the need for Bash case mapping.
 # Security Enhancement (Sentinel): Transitioning to null delimiters avoids field misalignment on embedded newlines.
-# Performance Optimization (Bolt): Read resolved EMOJI and LABEL directly from single-pass jq filter to avoid redundant Bash case mapping.
+# Security Fix (Sentinel): Assign resolved emoji and label to EMOJI and LABEL to prevent unbound variable crashes under set -u.
 {
   read -d '' -r EMOJI || true
   read -d '' -r LABEL || true
@@ -80,7 +80,7 @@ else
 fi
 
 [[ -z "${EMOJI:-}" ]] && EMOJI="🤖"
-[[ -z "${LABEL:-}"           || "$LABEL"          == *[!a-zA-Z0-9_\ -]* ]] && LABEL="Idle"
+[[ -z "${LABEL:-}"      || "$LABEL"      == *[!a-zA-Z0-9_\ -]* ]] && LABEL="Idle"
 [[ -z "${WORKSPACE:-}"  || "$WORKSPACE"  == *[!a-zA-Z0-9_./\ -]* ]] && WORKSPACE="unknown"
 [[ "${SANDBOX:-}"    != "true" && "$SANDBOX" != "false" ]] && SANDBOX="false"
 [[ -z "${VCS_BRANCH:-}" || "$VCS_BRANCH" == *[!a-zA-Z0-9_./-]* ]] && VCS_BRANCH=""
