@@ -57,8 +57,8 @@ set -euo pipefail
 
 # ─── Workspace Extraction, Input Validation, Sanitization & Fallbacks ───────
 # Ensure variables are strictly validated, sanitized, and set to default fallbacks in a single pass.
-# Performance Optimization (Bolt): Combined fallback & validation checks completely avoid redundant shell operations
-# on clean paths, yielding an expected speedup in title rendering.
+# Performance Optimization (Bolt): Reading EMOJI and LABEL directly from single-pass jq avoids running
+# redundant case statements in Bash and eliminates duplicate state mapping logic.
 if [ -n "${CWD:-}" ]; then
   if [[ "$CWD" == "/google/src/cloud/"* ]]; then
     TEMP_CWD="${CWD#/google/src/cloud/}"
