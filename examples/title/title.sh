@@ -45,7 +45,7 @@ set -euo pipefail
    else ["🤖", ($st | titlecase)]
    end) as $res |
 
-  safe($st), "\u0000",
+  safe($res[0]), "\u0000",
   safe($res[1]), "\u0000",
   safe(safe_nested("workspace"; "current_dir") // ""), "\u0000",
   safe(safe_nested("sandbox"; "enabled") // false), "\u0000",
