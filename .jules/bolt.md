@@ -43,3 +43,7 @@
 ## 2026-08-12 - [Delegating Case Manipulations to jq]
 **Learning:** In high-frequency CLI statusline and title scripts that already execute a single-pass `jq` invocation, performing case transformations (such as `ascii_upcase` or custom title-casing pipelines) inside `jq` itself is incredibly efficient. It avoids substantial sequential Bash parameter replacements (e.g. 26 consecutive `${VAR//a/A}` lines) or complex first-letter slicing loops, significantly reducing both CLI script execution latency and code verbosity.
 **Action:** When a shell pipeline already uses `jq` to parse/extract fields, perform string operations like casing transformations directly within the `jq` filter to avoid redundant, heavy Bash-only fallback string manipulation logic.
+
+## 2026-08-20 - [Single-Pass jq State Resolution with Lazy Casing]
+**Learning:** Performing unconditional casing operations (such as `ascii_upcase`) in `jq` on every execution when the parsed state is already a known constant (e.g., `thinking`, `working`, `idle`) wastes CPU cycles. Resolving state color codes and emoji labels directly inside a single-pass `jq` filter—and lazily evaluating `ascii_upcase` with input sanitization (`gsub("[^a-zA-Z0-9_-]"; "")`) only on unknown fallback states—reduces IPC pipe field count and simplifies Bash state rendering down to a lightweight 7-branch color mapper.
+**Action:** In high-frequency JSON-to-CLI rendering scripts, resolve state labels and colors within `jq` and evaluate expensive string transformations lazily only for fallback conditions.
