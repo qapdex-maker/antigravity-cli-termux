@@ -184,8 +184,8 @@ def main():
     assert "gemini;rm" not in title11, "Expected malicious model name to be sanitized and ignored"
     print("✅ Test 11 Passed: Malicious active model name sanitized and ignored successfully.")
 
-    # Test 12: Waiting for input states
-    for st in ["input_required", "waiting", "permission_required", "prompt"]:
+    # Test 12: Waiting for input & approval states
+    for st in ["input_required", "waiting", "permission_required", "prompt", "approval_required", "approval", "permission", "confirm", "confirmation"]:
         payload12 = {
             "agent_state": st,
             "workspace": {"current_dir": "/home/user/project"},
@@ -195,7 +195,20 @@ def main():
         assert code12 == 0, f"Error: {stderr12}"
         title12 = stdout12.strip()
         assert "❓ Waiting for Input | project" in title12, f"Expected '❓ Waiting for Input' for state {st}, got: {title12}"
-    print("✅ Test 12 Passed: Waiting for input states (waiting, input_required, permission_required, prompt) verified in title.")
+    print("✅ Test 12 Passed: Waiting for input & approval states (waiting, input_required, permission_required, prompt, approval_required, approval, permission, confirm, confirmation) verified in title.")
+
+    # Test 12b: Planning states
+    for st in ["planning", "plan"]:
+        payload12b = {
+            "agent_state": st,
+            "workspace": {"current_dir": "/home/user/project"},
+            "sandbox": {"enabled": True}
+        }
+        stdout12b, stderr12b, code12b = run_title(payload12b)
+        assert code12b == 0, f"Error: {stderr12b}"
+        title12b = stdout12b.strip()
+        assert "📋 Planning | project" in title12b, f"Expected '📋 Planning' for state {st}, got: {title12b}"
+    print("✅ Test 12b Passed: Planning states (planning, plan) verified in title.")
 
     # Test 13: Compacting and retrying states
     for st in ["compacting", "context_compacting", "summarizing"]:

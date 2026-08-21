@@ -89,3 +89,7 @@
 ## 2026-08-21 - Automated Dependency Installation in Terminal Installers
 **Learning:** On fresh CLI/Termux installations, expecting users to manually identify and install missing dependencies (such as `glibc`, `ca-certificates`, `gawk`, `jq`, or `proot`) via separate error messages causes setup friction and breaks the expected out-of-the-box installation flow. Automatically detecting missing required dependencies and invoking non-interactive package installations (`pkg install -y`) with fallback index updates (`pkg update -y`) delivers a seamless out-of-the-box setup experience on fresh environments.
 **Action:** In CLI installer scripts, automatically resolve and install missing tool and runtime package dependencies via native package managers, falling back to clean package list updates when initial installations fail.
+
+## 2026-08-22 - Visual Transparency & Affordances for Agent Planning and Approval States
+**Learning:** Unmapped planning states (`planning`, `plan`) and prompt approval aliases (`approval_required`, `approval`, `permission`, `confirm`, `confirmation`) can fall back to generic machine state text or default fallbacks, obscuring agent status. Explicitly mapping planning states to `📋 PLANNING` / `📋 Planning` in cyan and interactive approval states to `❓ WAITING` / `❓ Waiting for Input` in yellow across statuslines and taskbar headers provides clear visual cues.
+**Action:** Explicitly map agent planning and approval/confirmation state strings to distinct glyphs and semantic colors across prompt line and window header scripts.
