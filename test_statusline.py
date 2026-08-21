@@ -88,14 +88,23 @@ def main():
     assert "STOPPED" in stdout_i or "🛑" in stdout_i, "Expected 'STOPPED' state in statusline"
     print("✅ New cancelled, stopped, and interrupted states are verified.")
 
-    # 4b. Test waiting / user input states: input_required, waiting, permission_required, prompt
-    for st in ["input_required", "waiting", "permission_required", "prompt"]:
+    # 4b. Test waiting / user input & approval states: input_required, waiting, permission_required, prompt, approval_required, approval, permission, confirm, confirmation
+    for st in ["input_required", "waiting", "permission_required", "prompt", "approval_required", "approval", "permission", "confirm", "confirmation"]:
         payload_wait = payload.copy()
         payload_wait["agent_state"] = st
         stdout_w, _, code_w = run_statusline(payload_wait, 80)
         assert code_w == 0
         assert "WAITING" in stdout_w and "❓" in stdout_w, f"Expected 'WAITING' & '❓' for state {st}"
-    print("✅ Waiting for input states (waiting, input_required, permission_required, prompt) verified in statusline.")
+    print("✅ Waiting for input & approval states (waiting, input_required, permission_required, prompt, approval_required, approval, permission, confirm, confirmation) verified in statusline.")
+
+    # 4b2. Test planning states: planning, plan
+    for st in ["planning", "plan"]:
+        payload_plan = payload.copy()
+        payload_plan["agent_state"] = st
+        stdout_p, _, code_p = run_statusline(payload_plan, 80)
+        assert code_p == 0
+        assert "PLANNING" in stdout_p and "📋" in stdout_p, f"Expected 'PLANNING' & '📋' for state {st}"
+    print("✅ Planning states (planning, plan) verified in statusline.")
 
     # 4c. Test compacting and retrying states
     for st in ["compacting", "context_compacting", "summarizing"]:
