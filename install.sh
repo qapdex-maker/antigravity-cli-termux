@@ -437,6 +437,19 @@ if VERSION=$("$INSTALL_BIN_DIR/antigravity" --version 2>/dev/null); then
   ok "Engine online ($VERSION verified)"
   [[ -n "$ANTIGRAVITY_BAK" && -f "$ANTIGRAVITY_BAK" ]] && rm -f "$ANTIGRAVITY_BAK"
   [[ -n "$ANTIGRAVITY_VA39_BAK" && -f "$ANTIGRAVITY_VA39_BAK" ]] && rm -f "$ANTIGRAVITY_VA39_BAK"
+elif VERSION=$("$INSTALL_BIN_DIR/antigravity.va39" --version 2>/dev/null); then
+  info "Primary binary failed. Swapping to VA39 engine..."
+  cp -f "$INSTALL_BIN_DIR/antigravity.va39" "$INSTALL_BIN_DIR/antigravity"
+  chmod 0755 "$INSTALL_BIN_DIR/antigravity"
+  ln -sf "antigravity" "$INSTALL_BIN_DIR/agy"
+  if VERSION=$("$INSTALL_BIN_DIR/antigravity" --version 2>/dev/null); then
+    ok "Engine online ($VERSION verified via VA39 patch)"
+    [[ -n "$ANTIGRAVITY_BAK" && -f "$ANTIGRAVITY_BAK" ]] && rm -f "$ANTIGRAVITY_BAK"
+    [[ -n "$ANTIGRAVITY_VA39_BAK" && -f "$ANTIGRAVITY_VA39_BAK" ]] && rm -f "$ANTIGRAVITY_VA39_BAK"
+  else
+    rm -f "$INSTALL_BIN_DIR/antigravity" "$INSTALL_BIN_DIR/antigravity.va39"
+    die "Binaries failed to execute locally. Check dependencies."
+  fi
 else
   rm -f "$INSTALL_BIN_DIR/antigravity" "$INSTALL_BIN_DIR/antigravity.va39"
   die "Binaries failed to execute locally. Check dependencies."
