@@ -31,7 +31,7 @@ die() {
       printf '\n%s\n' " ❌ ${RED}[ERR]${RESET} Installation failed or was cancelled."
     fi
     printf "For manual patching and installation:\n"
-    printf "%shttps://gist.github.com/Brajesh2022/e42160d29b55417db6c18c52dd1d6d37%s\n\n" "$CYAN" "$RESET"
+    printf "%sSee MANUAL_PATCHING_GUIDE.md in this repository%s\n\n" "$CYAN" "$RESET"
   } >&2
   exit 1
 }
