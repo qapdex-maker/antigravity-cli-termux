@@ -99,7 +99,8 @@ COLS=$((10#0$COLS))
 # ─── Computed Values ─────────────────────────────────────────────────────────
 # Use LC_NUMERIC=C and printf -v to prevent fork overhead and locale errors
 LC_NUMERIC=C printf -v PCT_FMT "%.1f" "$USED_PCT"
-PCT_INT=${USED_PCT%.*}; PCT_INT=${PCT_INT:-0}
+# Derive PCT_INT from the formatted PCT_FMT string so indicator boundaries align with the displayed percentage
+PCT_INT=${PCT_FMT%.*}; PCT_INT=${PCT_INT:-0}
 # Performance Optimization (Bolt): Use pure Bash character-class validation to avoid regex overhead.
 [[ -z "$PCT_INT" || "$PCT_INT" == *[!0-9]* ]] && PCT_INT=0
 # Strip leading zeros to prevent Bash octal arithmetic/comparison issues
