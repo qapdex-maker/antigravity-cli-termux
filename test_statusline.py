@@ -152,6 +152,15 @@ def main():
     assert "⚡" not in stdout_normal, "Unexpected caution icon (⚡) for normal context usage (< 60%)"
     print("✅ 6. Multi-dimensional context window alerts/cues (⚠️ for >= 90%, ⚡ for 60-90%) verified.")
 
+    # 6b. Zero context window percentage (0.0%) -> dimmed gray text
+    payload_zero = payload.copy()
+    payload_zero["context_window"] = {"used_percentage": 0.0}
+    stdout_zero, _, code_zero = run_statusline(payload_zero, 80)
+    assert code_zero == 0
+    # FG_GRAY is \033[90m
+    assert "\033[90m0.0%" in stdout_zero, "Expected dimmed gray formatting (\033[90m) for 0.0% context window usage"
+    print("✅ 6b. Dimmed gray zero-value context window percentage (0.0%) verified.")
+
     # 7. Non-object safety check (Crashes avoidance for corrupted nested objects)
     payload_corrupted = payload.copy()
     payload_corrupted["context_window"] = "corrupted_string"

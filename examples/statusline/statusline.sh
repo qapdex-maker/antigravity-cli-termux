@@ -229,7 +229,13 @@ fi
 
 # ─── Stats ───────────────────────────────────────────────────────────────────
 # Match context percentage text color with warning color for high usage (red/yellow/white)
-CTX_PCT_COLOR="${BAR_COLOR}${B}"
+# Dim zero-value context percentage text (0.0%) for better visual hierarchy when unused
+if [ "$PCT_INT" -eq 0 ] && [ "$PCT_FMT" = "0.0" ]; then
+  CTX_PCT_COLOR="$FG_GRAY"
+else
+  CTX_PCT_COLOR="${BAR_COLOR}${B}"
+fi
+
 CTX_WARNING=""
 if [ "$PCT_INT" -ge 90 ]; then
   CTX_WARNING=" ⚠️"
