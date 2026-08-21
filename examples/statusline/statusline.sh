@@ -36,10 +36,12 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
 # Security/Performance Optimization (Bolt): Stripping both null-bytes and carriage returns (\r) directly inside
 # the single-pass jq filter avoids the overhead of executing separate Bash string replacements for 10 variables
 # in high-frequency statusline rendering.
+# Performance Optimization (Bolt): Resolving agent state color and label directly in jq with lazy ascii_upcase
+# evaluation avoids executing redundant ascii_upcase calls and removes the 16-branch case mapping in Bash.
 # Security Enhancement (Sentinel): Transitioning to null delimiters avoids field misalignment on embedded newlines.
 {
-  read -d '' -r STATE || true
-  read -d '' -r UPPER_STATE || true
+  read -d '' -r STATE_COLOR || true
+  read -d '' -r STATE_LABEL || true
   read -d '' -r USED_PCT || true
   read -d '' -r VCS_BRANCH || true
   read -d '' -r VCS_DIRTY || true
@@ -55,8 +57,30 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
   def safe_get(key): if type == "object" then .[key] else null end;
   # Security Enhancement (Sentinel): Assert root is an object before indexing parent_key to prevent fatal jq crashes on non-object root JSON payloads
   def safe_nested(parent_key; child_key): if (type == "object") and (.[parent_key] | type == "object") then .[parent_key][child_key] else null end;
-  safe(safe_get("agent_state") // "idle"), "\u0000",
-  safe((safe_get("agent_state") // "idle") | ascii_upcase), "\u0000",
+
+  (safe_get("agent_state") // "idle") as $st |
+  (if $st == "initializing" then ["cyan", "🚀 INIT"]
+   elif $st == "idle" then ["green", "🟢 READY"]
+   elif $st == "thinking" then ["yellow", "🤔 THINKING"]
+   elif $st == "working" then ["cyan", "🏃 WORKING"]
+   elif $st == "tool_use" then ["magenta", "🔧 TOOL"]
+   elif $st == "review" then ["blue", "👀 REVIEW"]
+   elif $st == "paused" then ["yellow", "⏸️ PAUSED"]
+   elif ($st == "waiting" or $st == "input_required" or $st == "permission_required" or $st == "prompt") then ["yellow", "❓ WAITING"]
+   elif ($st == "compacting" or $st == "context_compacting" or $st == "summarizing") then ["magenta", "🧹 COMPACTING"]
+   elif ($st == "retry" or $st == "retrying") then ["yellow", "🔄 RETRYING"]
+   elif ($st == "completed" or $st == "success") then ["green", "✅ COMPLETED"]
+   elif ($st == "failed" or $st == "error") then ["red", "❌ FAILED"]
+   elif $st == "cancelled" then ["red", "🛑 CANCELLED"]
+   elif ($st == "stopped" or $st == "interrupted") then ["red", "🛑 STOPPED"]
+   elif $st == "aborted" then ["red", "🛑 ABORTED"]
+   else
+     (($st | tostring | gsub("[^a-zA-Z0-9_-]"; "")) as $clean_st |
+      ["white", "⏳ " + (if $clean_st == "" then "IDLE" else ($clean_st | ascii_upcase) end)])
+   end) as $st_res |
+
+  safe($st_res[0]), "\u0000",
+  safe($st_res[1]), "\u0000",
   safe(safe_nested("context_window"; "used_percentage") // 0), "\u0000",
   safe(safe_nested("vcs"; "branch") // ""), "\u0000",
   safe(safe_nested("vcs"; "dirty") // false), "\u0000",
@@ -77,8 +101,8 @@ if [[ -z "$USED_PCT" || "$USED_PCT" == *[!0-9.]* || "$USED_PCT" == *.*.* || "$US
   USED_PCT=0
 fi
 
-[[ -z "$STATE"      || "$STATE"      == *[!a-zA-Z0-9_-]* ]] && STATE="idle"
-[[ -z "$UPPER_STATE" || "$UPPER_STATE" == *[!a-zA-Z0-9_-]* ]] && UPPER_STATE="IDLE"
+[[ -z "$STATE_COLOR" || "$STATE_COLOR" == *[!a-z]* ]] && STATE_COLOR="green"
+[[ -z "$STATE_LABEL" ]] && STATE_LABEL="🟢 READY"
 [[ -z "$VCS_BRANCH" || "$VCS_BRANCH" == *[!a-zA-Z0-9_./-]* ]] && VCS_BRANCH=""
 [[ "$VCS_DIRTY"  != "true" && "$VCS_DIRTY" != "false" ]] && VCS_DIRTY="false"
 [[ "$SANDBOX"    != "true" && "$SANDBOX" != "false" ]] && SANDBOX="false"
@@ -106,23 +130,15 @@ PCT_INT=${USED_PCT%.*}; PCT_INT=${PCT_INT:-0}
 PCT_INT=$((10#0$PCT_INT))
 
 # ─── State Indicator (No background colors) ──────────────────────────────────
-case "$STATE" in
-  initializing) S="${FG_BRIGHT_CYAN}${B}🚀 INIT${R}" ;;
-  idle)         S="${FG_BRIGHT_GREEN}${B}🟢 READY${R}" ;;
-  thinking)     S="${FG_BRIGHT_YELLOW}${B}🤔 THINKING${R}" ;;
-  working)      S="${FG_BRIGHT_CYAN}${B}🏃 WORKING${R}" ;;
-  tool_use)     S="${FG_BRIGHT_MAGENTA}${B}🔧 TOOL${R}" ;;
-  review)       S="${FG_BRIGHT_BLUE}${B}👀 REVIEW${R}" ;;
-  paused)       S="${FG_BRIGHT_YELLOW}${B}⏸️ PAUSED${R}" ;;
-  waiting|input_required|permission_required|prompt) S="${FG_BRIGHT_YELLOW}${B}❓ WAITING${R}" ;;
-  compacting|context_compacting|summarizing)          S="${FG_BRIGHT_MAGENTA}${B}🧹 COMPACTING${R}" ;;
-  retry|retrying)                                    S="${FG_BRIGHT_YELLOW}${B}🔄 RETRYING${R}" ;;
-  completed|success) S="${FG_BRIGHT_GREEN}${B}✅ COMPLETED${R}" ;;
-  failed|error)      S="${FG_BRIGHT_RED}${B}❌ FAILED${R}" ;;
-  cancelled)         S="${FG_BRIGHT_RED}${B}🛑 CANCELLED${R}" ;;
-  stopped|interrupted) S="${FG_BRIGHT_RED}${B}🛑 STOPPED${R}" ;;
-  aborted)           S="${FG_BRIGHT_RED}${B}🛑 ABORTED${R}" ;;
-  *)            S="${FG_WHITE}${B}⏳ ${UPPER_STATE}${R}" ;;
+# Performance Optimization (Bolt): Color selection mapped directly from jq resolved color code, avoiding a 16-branch Bash case statement.
+case "$STATE_COLOR" in
+  cyan)    S="${FG_BRIGHT_CYAN}${B}${STATE_LABEL}${R}" ;;
+  green)   S="${FG_BRIGHT_GREEN}${B}${STATE_LABEL}${R}" ;;
+  yellow)  S="${FG_BRIGHT_YELLOW}${B}${STATE_LABEL}${R}" ;;
+  magenta) S="${FG_BRIGHT_MAGENTA}${B}${STATE_LABEL}${R}" ;;
+  blue)    S="${FG_BRIGHT_BLUE}${B}${STATE_LABEL}${R}" ;;
+  red)     S="${FG_BRIGHT_RED}${B}${STATE_LABEL}${R}" ;;
+  *)       S="${FG_WHITE}${B}${STATE_LABEL}${R}" ;;
 esac
 
 # ─── VCS Branch ──────────────────────────────────────────────────────────────
