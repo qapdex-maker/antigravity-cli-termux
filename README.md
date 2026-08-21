@@ -28,6 +28,10 @@ chmod +x install.sh
 ./install.sh
 ```
 
+### Manual Patching & Setup
+
+If the automated installer does not work for your specific device or kernel configuration, refer to the [Manual Patching Guide](MANUAL_PATCHING_GUIDE.md) for step-by-step instructions on patching and setting up the binary manually.
+
 ---
 
 ## 🛠️ Getting started
