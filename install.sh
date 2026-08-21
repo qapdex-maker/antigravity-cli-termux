@@ -37,6 +37,29 @@ die() {
 }
 divider() { printf '%s\n' "${DIM}────────────────────────────────────────${RESET}"; }
 
+ensure_pkg() {
+  local check_cmd="$1"
+  local pkg_name="$2"
+  local alt_cmd="${3:-}"
+
+  if command -v "$check_cmd" >/dev/null 2>&1 || { [[ -n "$alt_cmd" ]] && command -v "$alt_cmd" >/dev/null 2>&1; }; then
+    return 0
+  fi
+
+  if command -v pkg >/dev/null 2>&1; then
+    info "Installing missing dependency: ${pkg_name}..."
+    if ! pkg install -y "$pkg_name"; then
+      info "Updating package lists and retrying installation of ${pkg_name}..."
+      pkg update -y && pkg install -y "$pkg_name" || return 1
+    fi
+    if command -v "$check_cmd" >/dev/null 2>&1 || { [[ -n "$alt_cmd" ]] && command -v "$alt_cmd" >/dev/null 2>&1; }; then
+      ok "Installed ${pkg_name}"
+      return 0
+    fi
+  fi
+  return 1
+}
+
 # Security Enhancement (Sentinel): Initialize critical variables to prevent environment hijacking
 # and arbitrary file deletion/move vulnerabilities (CWE-377, CWE-59, CWE-459).
 ANTIGRAVITY_BAK=""
@@ -297,14 +320,23 @@ download_with_progress() {
 # ── Early Dependency Check ────────────────────────────────────────────────────
 # Validate critical command-line dependencies curl and awk before the header/logo block
 # to prevent ugly shell/command-not-found errors during setup.
-command -v curl >/dev/null 2>&1 || die "curl is required to download assets. Please install it using: pkg install curl"
-command -v awk >/dev/null 2>&1  || die "awk is required to render the logo. Please install it using: pkg install gawk"
+command -v curl >/dev/null 2>&1 || ensure_pkg curl curl || die "curl is required to download assets. Please install it using: pkg install curl"
+command -v awk  >/dev/null 2>&1 || ensure_pkg awk gawk   || die "awk is required to render the logo. Please install it using: pkg install gawk"
 
 # Security Enhancement (Sentinel): Validate Termux CA bundle early before any remote network requests.
 if [[ ! -s "$CA_BUNDLE" ]]; then
-  die "Missing Termux CA bundle: $CA_BUNDLE
+  if command -v pkg >/dev/null 2>&1; then
+    info "Installing missing dependency: ca-certificates..."
+    if ! pkg install -y ca-certificates; then
+      pkg update -y && pkg install -y ca-certificates || true
+    fi
+  fi
+  if [[ ! -s "$CA_BUNDLE" ]]; then
+    die "Missing Termux CA bundle: $CA_BUNDLE
 Please install the ca-certificates package using:
   pkg install ca-certificates"
+  fi
+  ok "Installed ca-certificates"
 fi
 
 # ── Header ────────────────────────────────────────────────────────────────────
@@ -364,17 +396,28 @@ divider
 
 # ── Environment check ─────────────────────────────────────────────────────────
 [[ "$ARCH" == "aarch64" ]] || die "Architecture must be aarch64"
-command -v curl >/dev/null 2>&1  || die "curl is required. Please install it using: pkg install curl"
-command -v awk  >/dev/null 2>&1  || die "awk is required. Please install it using: pkg install gawk"
-command -v tar  >/dev/null 2>&1  || die "tar is required. Please install it using: pkg install tar"
-command -v install >/dev/null 2>&1 || die "install is required. Please install it using: pkg install coreutils"
-command -v jq      >/dev/null 2>&1 || die "jq is required (used by statusline and other tools). Please install it using: pkg install jq"
+command -v curl >/dev/null 2>&1    || ensure_pkg curl curl       || die "curl is required. Please install it using: pkg install curl"
+command -v awk  >/dev/null 2>&1    || ensure_pkg awk gawk        || die "awk is required. Please install it using: pkg install gawk"
+command -v tar  >/dev/null 2>&1    || ensure_pkg tar tar         || die "tar is required. Please install it using: pkg install tar"
+command -v install >/dev/null 2>&1 || ensure_pkg install coreutils || die "install is required. Please install it using: pkg install coreutils"
+command -v jq      >/dev/null 2>&1 || ensure_pkg jq jq           || die "jq is required (used by statusline and other tools). Please install it using: pkg install jq"
+command -v proot   >/dev/null 2>&1 || ensure_pkg proot proot     || true
 
 GLIBC_LOADER="${TERMUX_PREFIX}/glibc/lib/ld-linux-aarch64.so.1"
 if [[ ! -x "$GLIBC_LOADER" ]]; then
-  die "Missing Termux glibc loader: $GLIBC_LOADER
+  if command -v pkg >/dev/null 2>&1; then
+    info "Installing missing glibc environment (glibc-repo & glibc)..."
+    if ! (pkg install -y glibc-repo && pkg install -y glibc); then
+      info "Updating package lists and retrying glibc installation..."
+      pkg update -y && pkg install -y glibc-repo && pkg install -y glibc || true
+    fi
+  fi
+  if [[ ! -x "$GLIBC_LOADER" ]]; then
+    die "Missing Termux glibc loader: $GLIBC_LOADER
 Please install the glibc packages using:
   pkg install glibc-repo && pkg install glibc"
+  fi
+  ok "Installed Termux glibc loader"
 fi
 
 check_lse() {
@@ -387,9 +430,17 @@ check_qemu() {
 
 if ! check_lse; then
   if ! check_qemu; then
-    die "This CPU does not support LSE atomics, and qemu-aarch64 was not found.
+    if command -v pkg >/dev/null 2>&1; then
+      info "Installing missing LSE emulator: qemu-user-aarch64..."
+      if ! pkg install -y qemu-user-aarch64; then
+        pkg update -y && pkg install -y qemu-user-aarch64 || true
+      fi
+    fi
+    if ! check_qemu; then
+      die "This CPU does not support LSE atomics, and qemu-aarch64 was not found.
 Please install the qemu-user-aarch64 package using:
   pkg install qemu-user-aarch64"
+    fi
   fi
   ok "LSE Emulation: QEMU enabled"
 fi
