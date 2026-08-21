@@ -143,6 +143,22 @@ def main():
     assert "⚡" in stdout_caution, "Expected caution icon (⚡) for moderate context usage (60%-90%)"
     assert "⚠️" not in stdout_caution, "Unexpected warning icon (⚠️) for moderate context usage (60%-90%)"
 
+    # Boundary rounding test: 59.96% rounds to 60.0% -> should show ⚡
+    payload_boundary60 = payload.copy()
+    payload_boundary60["context_window"] = {"used_percentage": 59.96}
+    stdout_b60, _, code_b60 = run_statusline(payload_boundary60, 80)
+    assert code_b60 == 0
+    assert "60.0%" in stdout_b60, f"Expected 60.0% displayed, got: {stdout_b60}"
+    assert "⚡" in stdout_b60, "Expected caution icon (⚡) for 59.96% rounded to 60.0%"
+
+    # Boundary rounding test: 89.96% rounds to 90.0% -> should show ⚠️
+    payload_boundary90 = payload.copy()
+    payload_boundary90["context_window"] = {"used_percentage": 89.96}
+    stdout_b90, _, code_b90 = run_statusline(payload_boundary90, 80)
+    assert code_b90 == 0
+    assert "90.0%" in stdout_b90, f"Expected 90.0% displayed, got: {stdout_b90}"
+    assert "⚠️" in stdout_b90, "Expected warning icon (⚠️) for 89.96% rounded to 90.0%"
+
     # Normal: < 60% -> no emoji
     payload_normal = payload.copy()
     payload_normal["context_window"] = {"used_percentage": 45.0}
