@@ -85,3 +85,7 @@
 ## 2026-08-15 - Visual Transparency for Transient Agent States
 **Learning:** Unhandled transient background agent states (such as context compacting or retry loops) fall back to generic or uninformative labels, creating confusion during long operations. Explicitly mapping `compacting`/`summarizing` (`🧹 COMPACTING` / `🧹 Compacting`) and `retry`/`retrying` (`🔄 RETRYING` / `🔄 Retrying`) provides immediate, transparent feedback across both statuslines and taskbar window headers.
 **Action:** Always map transient background and retry agent states to clear, distinct emojis and human-friendly labels in statusline and window title components.
+
+## 2026-08-21 - Automated Dependency Installation in Terminal Installers
+**Learning:** On fresh CLI/Termux installations, expecting users to manually identify and install missing dependencies (such as `glibc`, `ca-certificates`, `gawk`, `jq`, or `proot`) via separate error messages causes setup friction and breaks the expected out-of-the-box installation flow. Automatically detecting missing required dependencies and invoking non-interactive package installations (`pkg install -y`) with fallback index updates (`pkg update -y`) delivers a seamless out-of-the-box setup experience on fresh environments.
+**Action:** In CLI installer scripts, automatically resolve and install missing tool and runtime package dependencies via native package managers, falling back to clean package list updates when initial installations fail.
