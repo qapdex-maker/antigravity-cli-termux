@@ -88,7 +88,7 @@ if [[ "$URL" == -* ]]; then
 fi
 
 # ── Environment Detection ─────────────────────────────────────────────────────
-if [[ -z "${TERMUX_VERSION:-}" || -z "${PREFIX:-}" ]]; then
+if [[ -z "${PREFIX:-}" || ( -z "${TERMUX_VERSION:-}" && "$PREFIX" != *"/com.termux"* ) ]]; then
   cat >&2 <<EOF
  ❌ ${RED}[ERR]${RESET} ${BOLD}This installer is only for native Termux.${RESET}
 
@@ -401,23 +401,38 @@ command -v awk  >/dev/null 2>&1    || ensure_pkg awk gawk        || die "awk is 
 command -v tar  >/dev/null 2>&1    || ensure_pkg tar tar         || die "tar is required. Please install it using: pkg install tar"
 command -v install >/dev/null 2>&1 || ensure_pkg install coreutils || die "install is required. Please install it using: pkg install coreutils"
 command -v jq      >/dev/null 2>&1 || ensure_pkg jq jq           || die "jq is required (used by statusline and other tools). Please install it using: pkg install jq"
-command -v proot   >/dev/null 2>&1 || ensure_pkg proot proot     || true
+command -v proot   >/dev/null 2>&1 || ensure_pkg proot proot     || die "proot is required. Please install it using: pkg install proot"
+
+# Ensure Termux resolv.conf exists for proot DNS binding
+RESOLV_CONF="${TERMUX_PREFIX}/etc/resolv.conf"
+if [[ ! -s "$RESOLV_CONF" ]]; then
+  mkdir -p "${TERMUX_PREFIX}/etc" 2>/dev/null || true
+  printf "%s\n" "nameserver 8.8.8.8" "nameserver 1.1.1.1" > "$RESOLV_CONF" 2>/dev/null || true
+fi
 
 GLIBC_LOADER="${TERMUX_PREFIX}/glibc/lib/ld-linux-aarch64.so.1"
 if [[ ! -x "$GLIBC_LOADER" ]]; then
   if command -v pkg >/dev/null 2>&1; then
     info "Installing missing glibc environment (glibc-repo & glibc)..."
-    if ! (pkg install -y glibc-repo && pkg install -y glibc); then
+    if ! (pkg install -y glibc-repo && pkg update -y && pkg install -y glibc); then
       info "Updating package lists and retrying glibc installation..."
-      pkg update -y && pkg install -y glibc-repo && pkg install -y glibc || true
+      pkg update -y && pkg install -y glibc-repo && pkg update -y && pkg install -y glibc || true
     fi
   fi
   if [[ ! -x "$GLIBC_LOADER" ]]; then
     die "Missing Termux glibc loader: $GLIBC_LOADER
 Please install the glibc packages using:
-  pkg install glibc-repo && pkg install glibc"
+  pkg install glibc-repo && pkg update -y && pkg install glibc"
   fi
   ok "Installed Termux glibc loader"
+fi
+
+# Ensure glibc libc.so shim directory exists to handle GNU ld script redirection
+GLIBC_SHIM_DIR="${HOME}/.local/lib/agy-glibc"
+mkdir -p "$GLIBC_SHIM_DIR" 2>/dev/null || true
+if [[ -f "${TERMUX_PREFIX}/glibc/lib/libc.so.6" ]]; then
+  ln -sfn "${TERMUX_PREFIX}/glibc/lib/libc.so.6" "${GLIBC_SHIM_DIR}/libc.so"
+  ln -sfn "${TERMUX_PREFIX}/glibc/lib/libc.so.6" "${GLIBC_SHIM_DIR}/libc.so.6"
 fi
 
 check_lse() {
