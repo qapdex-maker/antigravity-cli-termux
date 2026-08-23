@@ -6,6 +6,20 @@ The main goal is to run the official Linux ARM64 Antigravity binary directly fro
 
 The method is designed to be repeatable for future Antigravity releases. The patch script scans instruction patterns instead of relying on fixed offsets. If Antigravity changes its allocator code generation in the future, the script will print warning counts instead of silently claiming success.
 
+> **Prefer the one-shot installer?** This repository ships `install.sh`, which
+> downloads a pre-patched bundle and builds the exact same PRoot/glibc launcher
+> wrapper described below — automatically. Run it with:
+>
+> ```bash
+> bash install.sh
+> ```
+>
+> The installer installs to `$PREFIX/bin` (typically
+> `/data/data/com.termux/files/usr/bin`) and creates the `antigravity`, `agy`,
+> `a` and `agy-va39` commands there. This manual guide is the **fallback** for
+> when you want to patch the official Google `agy` binary yourself (it installs
+> to `~/.local/bin` instead). Both paths end up with the same wrapper logic.
+
 ---
 
 ## What This Fixes
