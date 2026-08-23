@@ -485,9 +485,42 @@ if [[ -f "$INSTALL_BIN_DIR/antigravity.va39" ]]; then
   mv -f "$INSTALL_BIN_DIR/antigravity.va39" "$ANTIGRAVITY_VA39_BAK" || die "Failed to back up existing antigravity.va39 binary from $INSTALL_BIN_DIR"
 fi
 
-install -m 0755 "$EXTRACT_DIR/agy" "$INSTALL_BIN_DIR/antigravity" || die "Failed to install antigravity binary to $INSTALL_BIN_DIR"
+# Install the patched VA39 binary and build the PRoot/glibc launcher wrapper.
+# The official glibc binary cannot run directly under Termux (Bionic) — it must
+# be launched through the glibc loader inside PRoot, exactly like the manual
+# guide describes. We make `antigravity`, `agy` and `a` all invoke that wrapper.
 install -m 0755 "$EXTRACT_DIR/agy.va39" "$INSTALL_BIN_DIR/antigravity.va39" || die "Failed to install antigravity.va39 binary to $INSTALL_BIN_DIR"
-ln -sf "antigravity" "$INSTALL_BIN_DIR/agy" || die "Failed to create antigravity symlink"
+
+GLIBC_LIB="$TERMUX_PREFIX/glibc/lib"
+GLIBC_SHIM="$HOME/.local/lib/agy-glibc"
+cat > "$INSTALL_BIN_DIR/agy-va39" <<EOW
+#!/data/data/com.termux/files/usr/bin/sh
+G="$GLIBC_LIB"
+S="$GLIBC_SHIM"
+unset LD_PRELOAD
+unset LD_LIBRARY_PATH
+export GODEBUG=netdns=go
+export SSL_CERT_FILE="$TERMUX_PREFIX/etc/tls/cert.pem"
+exec /data/data/com.termux/files/usr/bin/proot \\
+  -b "$TERMUX_PREFIX/etc/resolv.conf:/etc/resolv.conf" \\
+  "$G/ld-linux-aarch64.so.1" --library-path "$S:$G" \\
+  "$INSTALL_BIN_DIR/antigravity.va39" "\$@"
+EOW
+chmod 0755 "$INSTALL_BIN_DIR/agy-va39" || die "Failed to create agy-va39 wrapper"
+
+# `antigravity`, `agy` and `a` are thin wrappers around the PRoot launcher.
+make_wrapper() {
+  local name="$1"
+  cat > "$INSTALL_BIN_DIR/$name" <<EOW
+#!/data/data/com.termux/files/usr/bin/sh
+hash -r
+exec "$INSTALL_BIN_DIR/agy-va39" "\$@"
+EOW
+  chmod 0755 "$INSTALL_BIN_DIR/$name" || die "Failed to create $name wrapper"
+}
+make_wrapper antigravity
+make_wrapper agy
+make_wrapper a
 rm -rf "$EXTRACT_DIR"
 
 # ── Verify twin-binary ────────────────────────────────────────────────────────
