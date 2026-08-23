@@ -33,12 +33,6 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
 # Extract all fields in one pass to prevent spawning jq 8 times.
 # We append a sentinel "END" field to ensure the read block never fails on empty/missing trailing fields.
 # We also use tr -d '\r' to strip carriage returns to prevent CRLF/terminal injection.
-# Security/Performance Optimization (Bolt): Stripping both null-bytes and carriage returns (\r) directly inside
-# the single-pass jq filter avoids the overhead of executing separate Bash string replacements for 10 variables
-# in high-frequency statusline rendering.
-# Performance Optimization (Bolt): Resolving agent state color and label directly in jq with lazy ascii_upcase
-# evaluation avoids executing redundant ascii_upcase calls and removes the 16-branch case mapping in Bash.
-# Security Enhancement (Sentinel): Transitioning to null delimiters avoids field misalignment on embedded newlines.
 {
   read -d '' -r STATE_COLOR || true
   read -d '' -r STATE_LABEL || true
@@ -55,7 +49,6 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
 } < <(jq -j '
   def safe(v): (v | tostring | split("\u0000") | join("") | split("\r") | join(""));
   def safe_get(key): if type == "object" then .[key] else null end;
-  # Security Enhancement (Sentinel): Assert root is an object before indexing parent_key to prevent fatal jq crashes on non-object root JSON payloads
   def safe_nested(parent_key; child_key): if (type == "object") and (.[parent_key] | type == "object") then .[parent_key][child_key] else null end;
 
   (safe_get("agent_state") // "idle") as $st |
@@ -96,8 +89,6 @@ NUM_COLOR="${FG_BRIGHT_WHITE}${B}"
 
 # ─── Input Validation, Sanitization & Fallbacks ──────────────────────────────
 # Ensure variables are strictly validated, sanitized, and set to default fallbacks in a single pass.
-# Performance Optimization (Bolt): Combined fallback & validation checks completely avoid redundant shell operations
-# on clean paths, yielding an expected ~40% rendering speedup in the validation stage.
 if [[ -z "$USED_PCT" || "$USED_PCT" == *[!0-9.]* || "$USED_PCT" == *.*.* || "$USED_PCT" == "." ]]; then
   USED_PCT=0
 fi
@@ -114,8 +105,6 @@ fi
 [[ -z "$COLS"       || "$COLS"       == *[!0-9]* ]] && COLS=80
 
 # Strip leading zeros to prevent Bash octal arithmetic/comparison issues (e.g. 08, 09)
-# Performance Optimization (Bolt): Use highly efficient base-10 arithmetic expansion $((10#0$VAR))
-# instead of nested parameter expansions, which executes over 2x faster and is safe for empty values.
 ARTIFACTS=$((10#0$ARTIFACTS))
 SUBAGENTS=$((10#0$SUBAGENTS))
 BG_TASKS=$((10#0$BG_TASKS))
@@ -126,13 +115,11 @@ COLS=$((10#0$COLS))
 LC_NUMERIC=C printf -v PCT_FMT "%.1f" "$USED_PCT"
 # Derive PCT_INT from the formatted PCT_FMT string so indicator boundaries align with the displayed percentage
 PCT_INT=${PCT_FMT%.*}; PCT_INT=${PCT_INT:-0}
-# Performance Optimization (Bolt): Use pure Bash character-class validation to avoid regex overhead.
 [[ -z "$PCT_INT" || "$PCT_INT" == *[!0-9]* ]] && PCT_INT=0
 # Strip leading zeros to prevent Bash octal arithmetic/comparison issues
 PCT_INT=$((10#0$PCT_INT))
 
 # ─── State Indicator (No background colors) ──────────────────────────────────
-# Performance Optimization (Bolt): Color selection mapped directly from jq resolved color code, avoiding a 16-branch Bash case statement.
 case "$STATE_COLOR" in
   cyan)    S="${FG_BRIGHT_CYAN}${B}${STATE_LABEL}${R}" ;;
   green)   S="${FG_BRIGHT_GREEN}${B}${STATE_LABEL}${R}" ;;
@@ -204,9 +191,6 @@ else
 fi
 
 # Build bar with partial-fill last block using locale-safe ASCII placeholder slicing to avoid multi-byte UTF-8 string slicing.
-# Performance & Locale Optimization (Bolt): Standard string slicing `${FULL_BAR:0:FILLED}` slices by bytes in non-UTF-8 locales (e.g., LC_ALL=C),
-# causing terminal corruption on multi-byte characters like █ (3 bytes) and · (2 bytes). Slicing ASCII-only strings and then
-# translating to multi-byte UTF-8 completely avoids byte-slicing corruption and eliminates verbose case statements with high-speed parameter expansion.
 FULL_BAR_ASCII="###############"
 EMPTY_BAR_ASCII="---------------"
 

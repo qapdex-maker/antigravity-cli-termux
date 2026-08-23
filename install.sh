@@ -60,8 +60,6 @@ ensure_pkg() {
   return 1
 }
 
-# Security Enhancement (Sentinel): Initialize critical variables to prevent environment hijacking
-# and arbitrary file deletion/move vulnerabilities (CWE-377, CWE-59, CWE-459).
 ANTIGRAVITY_BAK=""
 ANTIGRAVITY_VA39_BAK=""
 INSTALL_BIN_DIR=""
@@ -102,7 +100,6 @@ EOF
   exit 1
 fi
 
-# Security Enhancement (Sentinel): Validate PREFIX to prevent option/command injection and path traversal
 if [[ "$PREFIX" == -* || "$PREFIX" == *[!a-zA-Z0-9_./-]* ]]; then
   die "Invalid PREFIX: contains unsafe characters or starts with a dash"
 fi
@@ -112,11 +109,8 @@ TERMUX_PREFIX="$PREFIX"
 CA_BUNDLE="${TERMUX_PREFIX}/etc/tls/cert.pem"
 INSTALL_BIN_DIR="${TERMUX_PREFIX}/bin"
 
-# Performance Optimization (Bolt): Cache the output of uname -m to avoid duplicate external process spawns.
 ARCH=$(uname -m)
 
-# Security Enhancement (Sentinel): Create a secure randomized temporary directory (CWE-377, CWE-59)
-# with restricted 0700 permissions to mitigate local race conditions, symlink attacks, and predictable tmp files.
 SECURE_TMP_DIR=$(mktemp -d "${TERMUX_PREFIX}/tmp/antigravity-install.XXXXXX" 2>/dev/null || mktemp -d)
 if [[ -z "${SECURE_TMP_DIR:-}" || ! -d "$SECURE_TMP_DIR" ]]; then
   die "Failed to create secure temporary directory"
@@ -160,8 +154,6 @@ trap cleanup EXIT
 trap handle_cancel INT TERM
 
 terminal_cols() {
-  # Performance Optimization (Bolt): Prioritize checking the native shell $COLUMNS variable
-  # when it is populated and strictly numeric to completely avoid spawning 'tput'.
   if [[ -n "${COLUMNS:-}" && "$COLUMNS" != *[!0-9]* ]]; then
     echo "$COLUMNS"
   elif [[ -r /dev/tty ]]; then
@@ -201,9 +193,6 @@ download_with_progress() {
 
   local total_size=""
   if head_out=$(curl --cacert "$CA_BUNDLE" -sLI --connect-timeout 5 -m 10 -H "Cache-Control: no-cache" -- "$url" 2>/dev/null); then
-    # Performance Optimization (Bolt): Pure Bash loop over $head_out prevents slow external process spawning (awk and tail).
-    # Runs ~70x faster, avoiding CPU and memory overhead on mobile/Termux systems.
-    # Security Enhancement (Sentinel): Uses '--' to terminate curl options and prevent option injection.
     while read -r line; do
       line="${line%$'\r'}"
       case "$line" in
@@ -224,7 +213,6 @@ download_with_progress() {
   fi
 
   # Strip leading zeros to prevent Bash octal arithmetic interpretation error (e.g. 08500000)
-  # Performance Optimization (Bolt): Use highly efficient base-10 arithmetic expansion $((10#0$VAR))
   total_size=$((10#0$total_size))
 
   local cols
@@ -232,14 +220,12 @@ download_with_progress() {
   [[ -z "$cols" || "$cols" == *[!0-9]* ]] && cols=60
 
   # Strip leading zeros to prevent Bash octal arithmetic interpretation error (e.g. 08, 09)
-  # Performance Optimization (Bolt): Use highly efficient base-10 arithmetic expansion $((10#0$VAR))
   cols=$((10#0$cols))
 
   local w=$(( cols - 38 ))
   (( w > 60 )) && w=60
   (( w < 10 )) && w=10
 
-  # Performance Optimization (Bolt): Probe the correct stat format flags once to avoid falling back repeatedly in the loop.
   local stat_format=""
   if stat -L -c "%s" /dev/null >/dev/null 2>&1; then
     stat_format="-L -c %s"
@@ -250,22 +236,15 @@ download_with_progress() {
   curl --cacert "$CA_BUNDLE" -fLs --connect-timeout 15 -m 120 -H "Cache-Control: no-cache" -o "$dest" -- "$url" >/dev/null 2>&1 &
   local pid=$!
 
-  # Performance & Locale Optimization (Bolt): Use ASCII-placeholder slicing to avoid byte-slicing
-  # truncation and terminal corruption in non-UTF-8 locales (like C or POSIX), and translate
-  # placeholders to multi-byte UTF-8 block characters using high-speed parameter expansion.
   local full_bar_ascii="############################################################"
   local empty_bar_ascii="------------------------------------------------------------"
 
-  # Performance Optimization (Bolt): Pre-calculate the total size in megabytes outside the progress bar
-  # loop to avoid redundant divisions, multiplication, and modulo operations on every 150ms tick.
   local t_mb_i=$(( total_size / 1048576 ))
   local t_mb_d=$(( (total_size * 10 / 1048576) % 10 ))
 
   while kill -0 "$pid" 2>/dev/null; do
     local current_size=0
     if [[ -f "$dest" ]]; then
-      # Performance Optimization (Bolt): Use the pre-probed stat flags directly. This avoids spawning failing commands
-      # and eliminates extra process spawns/fallback evaluation overhead in high-frequency rendering.
       if [[ -n "$stat_format" ]]; then
         # shellcheck disable=SC2086
         current_size=$(stat $stat_format "$dest" 2>/dev/null || echo 0)
@@ -276,7 +255,6 @@ download_with_progress() {
     [[ -z "$current_size" || "$current_size" == *[!0-9]* ]] && current_size=0
 
     # Strip leading zeros to prevent Bash octal arithmetic interpretation error (e.g. 08, 09)
-    # Performance Optimization (Bolt): Use highly efficient base-10 arithmetic expansion $((10#0$current_size))
     current_size=$((10#0$current_size))
 
     local pct=$(( total_size > 0 ? current_size * 100 / total_size : 0 ))
@@ -323,7 +301,6 @@ download_with_progress() {
 command -v curl >/dev/null 2>&1 || ensure_pkg curl curl || die "curl is required to download assets. Please install it using: pkg install curl"
 command -v awk  >/dev/null 2>&1 || ensure_pkg awk gawk   || die "awk is required to render the logo. Please install it using: pkg install gawk"
 
-# Security Enhancement (Sentinel): Validate Termux CA bundle early before any remote network requests.
 if [[ ! -s "$CA_BUNDLE" ]]; then
   if command -v pkg >/dev/null 2>&1; then
     info "Installing missing dependency: ca-certificates..."
@@ -341,7 +318,6 @@ fi
 
 # ── Header ────────────────────────────────────────────────────────────────────
 echo ""
-# Security Enhancement (Sentinel): Keep all temporary files within the secure randomized temporary directory
 TMP_LOGO=$(mktemp "${SECURE_TMP_DIR}/antigravity-logo.XXXXXX" 2>/dev/null || echo "${SECURE_TMP_DIR}/antigravity-logo.ans")
 
 if { curl --cacert "$CA_BUNDLE" -fLs --connect-timeout 5 -m 10 -H "Cache-Control: no-cache" -- "https://raw.githubusercontent.com/${REPO}/dev/logo.ans" > "$TMP_LOGO" 2>/dev/null || curl --cacert "$CA_BUNDLE" -fLs --connect-timeout 5 -m 10 -H "Cache-Control: no-cache" -- "https://raw.githubusercontent.com/Brajesh2022/antigravity-cli-termux/dev/logo.ans" > "$TMP_LOGO" 2>/dev/null; } && [[ -s "$TMP_LOGO" ]]; then
@@ -350,7 +326,6 @@ if { curl --cacert "$CA_BUNDLE" -fLs --connect-timeout 5 -m 10 -H "Cache-Control
   [[ -z "$COLS" || "$COLS" == *[!0-9]* ]] && COLS=60
 
   # Strip leading zeros to prevent Bash octal arithmetic interpretation error (e.g. 08, 09)
-  # Performance Optimization (Bolt): Use highly efficient base-10 arithmetic expansion $((10#0$COLS))
   COLS=$((10#0$COLS))
 
   awk -v cols="$COLS" -v arch="$ARCH" -v bold="${BOLD}${CYAN}" -v dim="${DIM}" -v grn="${GREEN}" -v rst="${RESET}" '
@@ -493,10 +468,14 @@ install -m 0755 "$EXTRACT_DIR/agy.va39" "$INSTALL_BIN_DIR/antigravity.va39" || d
 
 GLIBC_LIB="$TERMUX_PREFIX/glibc/lib"
 GLIBC_SHIM="$HOME/.local/lib/agy-glibc"
-cat > "$INSTALL_BIN_DIR/agy-va39" <<EOW
-#!/data/data/com.termux/files/usr/bin/sh
+# Define G/S in the installer scope so the (unquoted) heredoc expands them to
+# concrete paths when the wrapper file is written. Do NOT reference $G/$S inside
+# the wrapper body itself — the generated wrapper runs in a fresh shell without
+# them, so any $G/$S there would be unbound (set -u would abort).
 G="$GLIBC_LIB"
 S="$GLIBC_SHIM"
+cat > "$INSTALL_BIN_DIR/agy-va39" <<EOW
+#!/data/data/com.termux/files/usr/bin/sh
 unset LD_PRELOAD
 unset LD_LIBRARY_PATH
 export GODEBUG=netdns=go
@@ -573,7 +552,6 @@ case ":$PATH:" in
     ;;
   *)
     ACTIVE_SHELL="${SHELL##*/}"
-    # Security Enhancement (Sentinel): Sanitize ACTIVE_SHELL to prevent terminal escape sequence or output injection (POSIX compatible)
     case "$ACTIVE_SHELL" in
       *[!a-zA-Z0-9_-]*|"") ACTIVE_SHELL="bash" ;;
     esac

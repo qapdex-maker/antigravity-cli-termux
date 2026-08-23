@@ -1,10 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-# Performance Optimization (Bolt): Single-pass JSON extraction and string formatting inside jq.
-# Consolidating workspace extraction, input validation, string truncation, and title formatting
-# into a single jq invocation eliminates Bash process piping (`read`), parameter expansion overhead,
-# and sequential conditional evaluations, speeding up window title rendering by ~50% (6.7ms vs 10.6ms per run).
 jq -r '
   def safe_get(key): if type == "object" then .[key] else null end;
   def safe_nested(parent_key; child_key): if (type == "object") and (.[parent_key] | type == "object") then .[parent_key][child_key] else null end;
