@@ -602,4 +602,4 @@ if [[ "${ANTIGRAVITY_INSTALL_SKIP_LAUNCH:-0}" == "1" ]]; then
   exit 0
 fi
 
-exec "$INSTALL_BIN_DIR/antigravity"
+exec "$INSTALL_BIN_DIR/antigravity" 
