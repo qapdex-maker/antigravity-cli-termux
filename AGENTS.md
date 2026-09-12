@@ -52,4 +52,4 @@ jq . <<< "$DATA"
 ```
 
 ## 🔍 Verification
-All new shell scripts or modifications to existing ones MUST be verified for these patterns. If `shellcheck` is available, it should be run as part of the verification process.
+All new shell scripts or modifications to existing ones MUST be verified for these patterns. If `shellcheck` is available, it should be run as part of the verification process. 
