@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
-import subprocess
 import json
+import os
+import shutil
+import subprocess
 import sys
+
+BASH_BIN = os.environ.get('BASH') or shutil.which('bash') or 'bash'
+STATUSLINE_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'examples', 'statusline', 'statusline.sh')
 
 def run_statusline(payload, terminal_width=80):
     payload = payload.copy()
     payload['terminal_width'] = terminal_width
 
     proc = subprocess.Popen(
-        ['examples/statusline/statusline.sh'],
+        [BASH_BIN, STATUSLINE_SCRIPT],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -200,7 +205,7 @@ def main():
     # 7b. Raw non-object scalar JSON payload (e.g. string/number/boolean as root)
     for raw_val in ["raw_string_root", 12345, True]:
         proc = subprocess.Popen(
-            ['examples/statusline/statusline.sh'],
+            [BASH_BIN, STATUSLINE_SCRIPT],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

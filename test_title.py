@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-import subprocess
 import json
+import os
+import shutil
+import subprocess
 import sys
+
+BASH_BIN = os.environ.get('BASH') or shutil.which('bash') or 'bash'
+TITLE_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'examples', 'title', 'title.sh')
 
 def run_title(payload):
     proc = subprocess.Popen(
-        ['examples/title/title.sh'],
+        [BASH_BIN, TITLE_SCRIPT],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
